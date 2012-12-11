@@ -64,6 +64,6 @@ class WebServer
     # Delete a client.
     @app.del '/clients/:client', (req, res, next) =>
       res.json 200,
-        deleted: req.params.client
+        clients: @jsrv.remove_client(req.params.client)
 
 module.exports = WebServer

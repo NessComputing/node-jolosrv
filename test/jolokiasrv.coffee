@@ -60,4 +60,3 @@ describe 'JolokiaSrv', ->
   it "should be able to retrieve jolokia stats for the given attributes"
 
   it "should be able to update a gmond endpoint on an interval"
-  

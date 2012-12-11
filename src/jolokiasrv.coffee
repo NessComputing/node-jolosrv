@@ -40,16 +40,26 @@ class JolokiaSrv
   ###*
    * Removes a jolokia client from the hash.
    * @param {String} (name) The name of the client to remove
-   * @return {String} The name of the client that was removed
+   * @return {String} The list of remaining clients
   ###
   remove_client: (name) =>
     delete @jclients[name]
-    name
+    @list_clients()
 
   ###*
    * Add a new jolokia lookup client into the hash
   ###
   info_client: (name) =>
     @jclients[name]
+
+  ###*
+   * Starts up the ganglia gmond updater.
+  ###
+  start_gmond_service: =>
+
+  ###*
+   * Starts up the ganglia gmond updater.
+  ###
+  stop_gmond_service: =>
 
 module.exports = JolokiaSrv
