@@ -2,10 +2,10 @@
   "name":"jolosrv",
   "version":"0.0.1",
   "description": "A jolokia JMX to ganglia service",
-  "author": "Josh Toft <josh@likeness.com>",
+  "author": "Josh Toft <joshtoft@gmail.com>",
   "repository": {
     "type": "git",
-    "url": "https://github.com/NessComputing/node-jolosrv.git"
+    "url": "https://github.com/seryl/node-jolosrv.git"
   },
   "dependencies": {
     "winston": "0.6.x",
@@ -15,6 +15,7 @@
     "express":"3.0.x",
     "async": "0.1.x",
     "jolokia-client": "0.0.x",
+    "gmetric": "0.0.x",
     "pkginfo": "0.2.x"
   },
   "devDependencies": {
