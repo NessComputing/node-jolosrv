@@ -19,16 +19,6 @@ class CLI
       .describe('c', 'The configuration file to use')
       .default('c', "/etc/jolosrv.json")
 
-      # redis host
-      .alias('H', 'redis_host')
-      .describe('H', 'The redis host to connect')
-      .default('H', "127.0.0.1")
-
-      # redis port
-      .alias('P', 'redis_port')
-      .describe('P', 'The redis port to connect')
-      .default('P', "6379")
-
       # logging
       .alias('l', 'loglevel')
       .describe('l', 'Set the log level (debug, info, warn, error, fatal)')
