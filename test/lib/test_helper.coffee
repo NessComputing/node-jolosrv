@@ -1,5 +1,4 @@
-path = require 'path'
-
+global.path = require 'path'
 global.os = require 'os'
 
 global.chai = require 'chai'

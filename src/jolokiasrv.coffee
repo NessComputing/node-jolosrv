@@ -7,13 +7,49 @@ class JolokiaSrv
   constructor: (interval) ->
     @interval = interval || 10
     @jclients = {}
-    @add_client('test', 'http://10.29.62.32:8083/jolokia/')
-    @jclients['test'].read 'java.lang:name=Par Survivor Space,type=MemoryPool', (response) ->
-      # console.log Object.keys(response.value)
-      console.log response.value
 
-  add_client: (name, url) =>
-    # url = 'http://10.29.62.32:8083/jolokia/'
-    @jclients[name] = new jolokia(url)
+  ###*
+   * Add a new jolokia lookup client into the hash.
+   * @param {String} (name) The name of the client to add
+   * @param {String} (url) The jolokia url for the client
+   * @param {Object} (attributes) The attributes to lookup for the client
+   * @return {Object} The jolokia client that was added
+  ###
+  add_client: (name, url, attributes) =>
+    @jclients[name] =
+      client: new jolokia(url)
+      attributes: attributes || new Object()
+
+  ###*
+   * Add a new jolokia lookup client into the hash.
+   * @param {String} (name) The name of the client
+   * @param {String} (attr) The name of the attribute lookup
+   * @param {Object} (data) The attribute lookup information
+   * @return {Object} The added attribute
+  ###
+  add_attribute: (name, attr, data) =>
+    @jsclients[name][attributes][attr] = data
+
+  ###*
+   * List the current jolokia clients.
+   * @return {Array} The list of current clients
+  ###
+  list_clients: =>
+    Object.keys(@jclients)
+
+  ###*
+   * Removes a jolokia client from the hash.
+   * @param {String} (name) The name of the client to remove
+   * @return {String} The name of the client that was removed
+  ###
+  remove_client: (name) =>
+    delete @jclients[name]
+    name
+
+  ###*
+   * Add a new jolokia lookup client into the hash
+  ###
+  info_client: (name) =>
+    @jclients[name]
 
 module.exports = JolokiaSrv

@@ -2,7 +2,6 @@ Logger = require './logger'
 CLI = require './cli'
 Config = require './config'
 {Identity, generate_identity} = require './identity'
-JolokiaSrv = require './jolokiasrv'
 WebServer = require './webserver'
 
 ###*
@@ -14,7 +13,6 @@ class Application
     @logger = Logger.get()
     @cli = new CLI()
     @identity = Identity.get()
-    @jsrv = new JolokiaSrv()
     @ws = new WebServer()
 
   ###*
