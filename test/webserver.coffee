@@ -28,17 +28,17 @@ describe 'WebServer', ->
     rest.post("#{url}/clients",
       data:
         name: "bob"
-        url: "http://localhost:1234"
+        url: "http://localhost:1234/jolokia/"
     ).on 'complete', (data) =>
       data.name.should.equal 'bob'
-      data.url.should.equal 'http://localhost:1234'
+      data.url.should.equal 'http://localhost:1234/'
       Object.keys(data.attributes).length.should.equal 0
       done()
 
   it "throws 400 when adding a client without a name", (done) ->
     rest.post("#{url}/clients",
       data:
-        url: "http://localhost:1234"
+        url: "http://localhost:1234/jolokia/"
     ).on 'complete', (data, res) =>
       res.statusCode.should.equal 400
       done()
@@ -55,19 +55,19 @@ describe 'WebServer', ->
     rest.post("#{url}/clients",
       data:
         name: "bob"
-        url: "http://localhost:1234"
+        url: "http://localhost:1234/jolokia/"
     ).on 'complete', (data) =>
       data.name.should.equal 'bob'
-      data.url.should.equal 'http://localhost:1234'
+      data.url.should.equal 'http://localhost:1234/jolokia/'
       Object.keys(data.attributes).length.should.equal 0
 
       rest.post("#{url}/clients",
         data:
           name: "bob"
-          url: "http://localhost:1235"
+          url: "http://localhost:1235/jolokia/"
       ).on 'complete', (data) =>
         data.name.should.equal 'bob'
-        data.url.should.equal 'http://localhost:1235'
+        data.url.should.equal 'http://localhost:1235/jolokia/'
         Object.keys(data.attributes).length.should.equal 0
         done()
 
@@ -75,10 +75,10 @@ describe 'WebServer', ->
     rest.post("#{url}/clients",
       data:
         name: "bob"
-        url: "http://localhost:1234"
+        url: "http://localhost:1234/jolokia/"
     ).on 'complete', (data) =>
       data.name.should.equal 'bob'
-      data.url.should.equal 'http://localhost:1234'
+      data.url.should.equal 'http://localhost:1234/jolokia/'
       Object.keys(data.attributes).length.should.equal 0
       rest.get("#{url}/clients").on 'complete', (data) =>
         data.clients.should.include 'bob'
@@ -89,10 +89,10 @@ describe 'WebServer', ->
     rest.post("#{url}/clients",
       data:
         name: "bob"
-        url: "http://localhost:1234"
+        url: "http://localhost:1234/jolokia/"
     ).on 'complete', (data) =>
       data.name.should.equal 'bob'
-      data.url.should.equal 'http://localhost:1234'
+      data.url.should.equal 'http://localhost:1234/jolokia/'
       
       rest.get("#{url}/clients").on 'complete', (data) =>
         data.clients.should.include 'bob'
@@ -101,10 +101,10 @@ describe 'WebServer', ->
         rest.post("#{url}/clients",
           data:
             name: "joe"
-            url: "http://localhost:1235"
+            url: "http://localhost:1235/jolokia/"
         ).on 'complete', (data) =>
           data.name.should.equal 'joe'
-          data.url.should.equal 'http://localhost:1235'
+          data.url.should.equal 'http://localhost:1235/jolokia/'
 
           rest.get("#{url}/clients").on 'complete', (data) =>
             data.clients.should.include 'bob'
@@ -117,8 +117,20 @@ describe 'WebServer', ->
               Object.keys(data.clients).length.should.equal 1
               done()
 
-  it "should be able to add attributes to a client"
+  it "should be able to add attributes to a client", (done) ->
+    rest.post("#{url}/clients",
+      data:
+        name: "bob"
+        url: url_href
+    ).on 'complete', (data) =>
 
-  it "should be able to remove attributes from a client"
+  it "should be able to remove attributes from a client", (done) ->
+    url_href = 'http://localhost:1234/jolokia/'
+    js.add_client('bob', url_href)
+    rest.post("#{url}/clients",
+      data:
+        name: "bob"
+        url: url_href
+    ).on 'complete', (data) =>
 
   it "should be able to retrieve a detailed list of clients"

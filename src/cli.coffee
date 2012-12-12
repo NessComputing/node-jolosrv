@@ -22,7 +22,12 @@ class CLI
       # ganglia gmetric gmond host
       .alias('g', 'gmetric')
       .describe('g', 'The gmond host to send gmetric data to')
-      .default('g', null)
+      .default('g', '127.0.0.1')
+
+      # ganglia gmetric gmond port
+      .alias('P', 'gPort')
+      .describe('P', 'The gmond port to send gmetric data to')
+      .default('P', 8649)
 
       # logging
       .alias('l', 'loglevel')

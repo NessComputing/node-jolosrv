@@ -50,7 +50,7 @@ describe 'JolokiaSrv', ->
     clients.should.include 'joe'
     done()
 
-  it "should be able to add attributes to a client"
+  it "should be able to add attributes to a client", (done) ->
     #js.add_attribute 'test',
     #  name: 'java.lang:name=Par Survivor Space,type=MemoryPool'
     #  ???:
