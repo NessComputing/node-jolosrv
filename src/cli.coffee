@@ -19,6 +19,11 @@ class CLI
       .describe('c', 'The configuration file to use')
       .default('c', "/etc/jolosrv.json")
 
+      # ganglia gmetric gmond host
+      .alias('g', 'gmetric')
+      .describe('g', 'The gmond host to send gmetric data to')
+      .default('g', null)
+
       # logging
       .alias('l', 'loglevel')
       .describe('l', 'Set the log level (debug, info, warn, error, fatal)')

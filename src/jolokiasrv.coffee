@@ -27,8 +27,10 @@ class JolokiaSrv
    * @param {Object} (data) The attribute lookup information
    * @return {Object} The added attribute
   ###
-  add_attribute: (name, attr, data) =>
-    @jsclients[name][attributes][attr] = data
+  add_attribute: (name, group, stat, attr, data) =>
+    @jclients[name][group] or= new Object()
+    @jclients[name][group][stat] or= new Object()
+    @jclients[name][group][stat]['attributes'] or= new Array()
 
   ###*
    * List the current jolokia clients.
