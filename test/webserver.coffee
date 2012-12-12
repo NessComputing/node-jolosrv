@@ -31,7 +31,7 @@ describe 'WebServer', ->
         url: "http://localhost:1234/jolokia/"
     ).on 'complete', (data) =>
       data.name.should.equal 'bob'
-      data.url.should.equal 'http://localhost:1234/'
+      data.url.should.equal 'http://localhost:1234/jolokia/'
       Object.keys(data.attributes).length.should.equal 0
       done()
 
@@ -117,20 +117,18 @@ describe 'WebServer', ->
               Object.keys(data.clients).length.should.equal 1
               done()
 
-  it "should be able to add attributes to a client", (done) ->
-    rest.post("#{url}/clients",
-      data:
-        name: "bob"
-        url: url_href
-    ).on 'complete', (data) =>
+  it "should be able to add attributes to a client"
+    # rest.post("#{url}/clients",
+    #   data:
+    #     name: "bob"
+    #     url: url_href
+    # ).on 'complete', (data) =>
 
-  it "should be able to remove attributes from a client", (done) ->
-    url_href = 'http://localhost:1234/jolokia/'
-    js.add_client('bob', url_href)
-    rest.post("#{url}/clients",
-      data:
-        name: "bob"
-        url: url_href
-    ).on 'complete', (data) =>
+  it "should be able to remove attributes from a client"
+    # rest.post("#{url}/clients",
+    #   data:
+    #     name: "bob"
+    #     url: url_href
+    # ).on 'complete', (data) =>
 
   it "should be able to retrieve a detailed list of clients"
