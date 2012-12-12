@@ -48,7 +48,9 @@ class GmetricWrapper
       uint32: "unsigned_int"
       int: "int"
       int32: "int"
-      float: "float"
+      # BORKEN! Refs: https://github.com/jbuchbinder/node-gmetric/pull/2
+      float: "front"
+      front: "front"
       double: "double"
 
     name = value_lookup[name.toString().toLowerCase()]
