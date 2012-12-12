@@ -1,4 +1,5 @@
 jolokia = require 'jolokia-client'
+async = require 'async'
 
 ###*
  * Jolokia server client wrapper.
@@ -30,7 +31,18 @@ class JolokiaSrv
   add_attribute: (name, group, stat, attr, data) =>
     @jclients[name][group] or= new Object()
     @jclients[name][group][stat] or= new Object()
-    @jclients[name][group][stat]['attributes'] or= new Array()
+    @jclients[name][group][stat]['attributes'] or= new Object()
+
+  ###*
+   * Removes all jolokia attributes for the given key.
+   * @param {String} (name) The name of the client to remove attributes of
+  ###
+  remove_all_attributes: (name) =>
+    async.forEach Object.keys(@jclients[name])
+    , (key, fn) =>
+      delete @jclients[name][key]
+      fn(null, true)
+    , (err) =>
 
   ###*
    * List the current jolokia clients.
