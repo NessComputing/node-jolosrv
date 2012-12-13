@@ -129,7 +129,6 @@ describe 'JolokiaSrv', ->
         'CollectionTime'), true)
 
     js.remove_attributes('test', 'java.lang')
-    console.log js.jclients
     done()
 
   it "should be able to retrieve jolokia stats for the given attributes"

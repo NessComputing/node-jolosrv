@@ -109,28 +109,86 @@ describe 'WebServer', ->
               Object.keys(data.clients).length.should.equal 1
               done()
 
-  it "should be able to add attributes to a client" #, (done) ->
-    # url_href = "http://localhost:1234/jolokia/"
-    # attrs = 
-    #   "java.lang":
-    #     "name=ConcurrentMarkSweep,type=GarbageCollector":
-    #       graph:
-    #         host: "examplehost.domain.com"
-    #         units: "gc/sec"
-    #         slope: "both"
-    #         tmax: 60
-    #         dmax: 180
+  it "should be able to add attributes to a client", (done) ->
+    url_href = "http://localhost:1234/jolokia/"
+    attrs = 
+      "java.lang":
+        "name=ConcurrentMarkSweep,type=GarbageCollector":
+          CollectionTime:
+            graph:
+              host: "examplehost.domain.com"
+              units: "gc/sec"
+              slope: "both"
+              tmax: 60
+              dmax: 180
 
-    # rest.postJson("#{url}/clients",
-    #   name: "bob"
-    #   url: url_href
-    #   attributes: attrs
+    rest.postJson("#{url}/clients",
+      name: "bob"
+      url: url_href
+      attributes: attrs
+    ).on 'complete', (data) =>
+      data.name.should.equal 'bob'
+      data.url.should.equal 'http://localhost:1234/jolokia/'
+      assert.equal(data.attributes.hasOwnProperty('java.lang'), true)
+      assert.equal(data.attributes['java.lang'].hasOwnProperty(
+        'name=ConcurrentMarkSweep,type=GarbageCollector'), true)
+      assert.equal(data.attributes['java.lang']\
+        ['name=ConcurrentMarkSweep,type=GarbageCollector']\
+        .hasOwnProperty('CollectionTime'), true)
+      assert.equal(data.attributes['java.lang']\
+        ['name=ConcurrentMarkSweep,type=GarbageCollector']\
+        ['CollectionTime'].hasOwnProperty('graph'), true)
 
-    # ).on 'complete', (data) =>
-    #   data.name.should.equal 'bob'
-    #   data.url.should.equal 'http://localhost:1234/jolokia/'
-    #   console.log data.attributes
-    #   done()
+      graph_attrs = data.attributes['java.lang']\
+        ['name=ConcurrentMarkSweep,type=GarbageCollector']\
+        ['CollectionTime']['graph']
+      graph_attrs.host.should.equal "examplehost.domain.com"
+      graph_attrs.units.should.equal "gc/sec"
+      graph_attrs.slope.should.equal "both"
+      graph_attrs.tmax.should.equal 60
+      graph_attrs.dmax.should.equal 180
+      done()
+
+  it "should be able to add attributes that are hash lookups to a client",
+  (done) ->
+    url_href = "http://localhost:1234/jolokia/"
+    attrs = 
+      "java.lang":
+        "name=ConcurrentMarkSweep,type=GarbageCollector":
+          'LastGcInfo.memoryUsageAfterGc':
+            graph:
+              host: "examplehost.domain.com"
+              units: "gc/sec"
+              slope: "both"
+              tmax: 60
+              dmax: 180
+
+    rest.postJson("#{url}/clients",
+      name: "bob"
+      url: url_href
+      attributes: attrs
+    ).on 'complete', (data) =>
+      data.name.should.equal 'bob'
+      data.url.should.equal 'http://localhost:1234/jolokia/'
+      assert.equal(data.attributes.hasOwnProperty('java.lang'), true)
+      assert.equal(data.attributes['java.lang'].hasOwnProperty(
+        'name=ConcurrentMarkSweep,type=GarbageCollector'), true)
+      assert.equal(data.attributes['java.lang']\
+        ['name=ConcurrentMarkSweep,type=GarbageCollector']\
+        .hasOwnProperty('LastGcInfo.memoryUsageAfterGc'), true)
+      assert.equal(data.attributes['java.lang']\
+        ['name=ConcurrentMarkSweep,type=GarbageCollector']\
+        ['LastGcInfo.memoryUsageAfterGc'].hasOwnProperty('graph'), true)
+
+      graph_attrs = data.attributes['java.lang']\
+        ['name=ConcurrentMarkSweep,type=GarbageCollector']\
+        ['LastGcInfo.memoryUsageAfterGc']['graph']
+      graph_attrs.host.should.equal "examplehost.domain.com"
+      graph_attrs.units.should.equal "gc/sec"
+      graph_attrs.slope.should.equal "both"
+      graph_attrs.tmax.should.equal 60
+      graph_attrs.dmax.should.equal 180
+      done()
 
   it "should be able to remove attributes from a client"
     # rest.postJson("#{url}/clients",

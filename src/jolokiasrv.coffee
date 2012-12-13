@@ -48,11 +48,7 @@ class JolokiaSrv
   remove_attributes: (name, group) =>
     return unless @jclients[name]
     return unless @jclients[name][group]
-    async.forEach Object.keys(@jclients[name][group])
-    , (key) =>
-      delete @jclients[name][group][key]
-    , (err) =>
-      throw new Error "Error removing attributes for: #{name}"
+    delete @jclients[name][group]
 
   ###*
    * List the current jolokia clients.
