@@ -52,83 +52,137 @@ describe 'JolokiaSrv', ->
     done()
 
   it "should be able to add attributes to a client", (done) ->
-    js.add_attribute 'test'
-    , 'java.lang'
-    , 'name=ConcurrentMarkSweep,type=GarbageCollector'
-    , 'CollectionTime'
-    , graph:
-      host: "examplehost.domain.com"
-      units: "gc/sec"
-      slope: "both"
-      tmax: 60
-      dmax: 180
+    url_href = 'http://localhost:1234/jolokia/'
+    js.add_client 'test', url_href
+    , 'java.lang':
+      'name=ConcurrentMarkSweep,type=GarbageCollector':
+        'CollectionTime':
+          graph:
+            host: "examplehost.domain.com"
+            units: "gc/sec"
+            slope: "both"
+            tmax: 60
+            dmax: 180
 
-    clients = js.jclients
-    Object.keys(clients).length.should.equal 1
-    assert.equal(clients.hasOwnProperty('test'), true)
-    assert.equal(clients.test.hasOwnProperty('java.lang'), true)
+    assert.equal(js.jclients.hasOwnProperty('test'), true)
+    client = js.jclients['test']
+    Object.keys(client).length.should.equal 3
+    assert.equal(client.hasOwnProperty('client'), true)
+    assert.equal(client.hasOwnProperty('gw'), true)
+    assert.equal(client.hasOwnProperty('attributes'), true)
+    assert.equal(client['attributes'].hasOwnProperty('java.lang'), true)
     assert.equal(
-      clients.test['java.lang'].hasOwnProperty(
+      client['attributes']['java.lang'].hasOwnProperty(
         'name=ConcurrentMarkSweep,type=GarbageCollector'), true)
     assert.equal(
-      clients.test['java.lang']\
+      client['attributes']['java.lang']\
       ['name=ConcurrentMarkSweep,type=GarbageCollector'].hasOwnProperty(
         'CollectionTime'), true)
-
     done()
 
   it "should be able to add attributes that are hash lookups to a client"
   , (done) ->
-    js.add_attribute 'test'
-    , 'java.lang'
-    , 'name=ConcurrentMarkSweep,type=GarbageCollector'
-    , 'LastGcInfo.memoryUsageAfterGc'
-    , graph:
-      host: "examplehost.domain.com"
-      units: "gc/sec"
-      slope: "both"
-      tmax: 60
-      dmax: 180
+    url_href = 'http://localhost:1234/jolokia/'
+    js.add_client 'test', url_href
+    , 'java.lang':
+      'name=ConcurrentMarkSweep,type=GarbageCollector':
+        'LastGcInfo.memoryUsageAfterGc':
+          graph:
+            host: "examplehost.domain.com"
+            units: "gc/sec"
+            slope: "both"
+            tmax: 60
+            dmax: 180
 
-    clients = js.jclients
-    Object.keys(clients).length.should.equal 1
-    assert.equal(clients.hasOwnProperty('test'), true)
-    assert.equal(clients.test.hasOwnProperty('java.lang'), true)
+    assert.equal(js.jclients.hasOwnProperty('test'), true)
+    client = js.jclients['test']
+    Object.keys(client).length.should.equal 3
+    assert.equal(client.hasOwnProperty('client'), true)
+    assert.equal(client.hasOwnProperty('gw'), true)
+    assert.equal(client.hasOwnProperty('attributes'), true)
+    assert.equal(client['attributes'].hasOwnProperty('java.lang'), true)
     assert.equal(
-      clients.test['java.lang'].hasOwnProperty(
+      client['attributes']['java.lang'].hasOwnProperty(
         'name=ConcurrentMarkSweep,type=GarbageCollector'), true)
     assert.equal(
-      clients.test['java.lang']\
+      client['attributes']['java.lang']\
       ['name=ConcurrentMarkSweep,type=GarbageCollector'].hasOwnProperty(
         'LastGcInfo.memoryUsageAfterGc'), true)
-
     done()
 
   it "should be able to remove all attributes from a client", (done) ->
-    js.add_attribute 'test'
-    , 'java.lang'
-    , 'name=ConcurrentMarkSweep,type=GarbageCollector'
-    , 'CollectionTime'
-    , graph:
-      host: "examplehost.domain.com"
-      units: "gc/sec"
-      slope: "both"
-      tmax: 60
-      dmax: 180
+    url_href = 'http://localhost:1234/jolokia/'
+    js.add_client 'test', url_href
+    , 'java.lang':
+      'name=ConcurrentMarkSweep,type=GarbageCollector':
+        'CollectionTime':
+          graph:
+            host: "examplehost.domain.com"
+            units: "gc/sec"
+            slope: "both"
+            tmax: 60
+            dmax: 180
 
-    clients = js.jclients
-    Object.keys(clients).length.should.equal 1
-    assert.equal(clients.hasOwnProperty('test'), true)
-    assert.equal(clients.test.hasOwnProperty('java.lang'), true)
+    assert.equal(js.jclients.hasOwnProperty('test'), true)
+    client = js.jclients['test']
+    Object.keys(client).length.should.equal 3
+    assert.equal(client['attributes'].hasOwnProperty('java.lang'), true)
     assert.equal(
-      clients.test['java.lang'].hasOwnProperty(
+      client['attributes']['java.lang'].hasOwnProperty(
         'name=ConcurrentMarkSweep,type=GarbageCollector'), true)
     assert.equal(
-      clients.test['java.lang']\
+      client['attributes']['java.lang']\
       ['name=ConcurrentMarkSweep,type=GarbageCollector'].hasOwnProperty(
         'CollectionTime'), true)
 
     js.remove_attributes('test', 'java.lang')
+    client = js.jclients['test']
+    Object.keys(client['attributes']).length.should.equal 0
+    done()
+
+  it "should be able to retrieve detailed info for a client", (done) ->
+    url_href = 'http://localhost:1234/jolokia/'
+    js.add_client 'test', url_href
+    , 'java.lang':
+      'somegroup':
+        'someattr':
+          data: {}
+
+    client = js.info_client('test')
+    assert.equal(client.hasOwnProperty('java.lang'), true)
+    assert.equal(client['java.lang'].hasOwnProperty('somegroup'), true)
+    assert.equal(client['java.lang']['somegroup']\
+      .hasOwnProperty('someattr'), true)
+    assert.equal(client['java.lang']['somegroup']['someattr']\
+      .hasOwnProperty('data'), true)
+    assert.equal(Object.keys(
+      client['java.lang']['somegroup']['someattr']['data']).length, 0)
+    done()
+
+  it "should be able to retrieve detailed info for all clients", (done) =>
+    url_href = 'http://localhost:1234/jolokia/'
+    js.add_client 'test', url_href
+    , 'java.lang':
+      'somegroup':
+        'someattr':
+          data: {}
+
+    js.add_client 'test2', url_href
+    , 'java.lang':
+      'somegroup':
+        'someattr':
+          data: {}
+
+    clients = js.info_all_clients()
+    for k in ['test', 'test2']
+      assert.equal(clients[k].hasOwnProperty('java.lang'), true)
+      assert.equal(clients[k]['java.lang'].hasOwnProperty('somegroup'), true)
+      assert.equal(clients[k]['java.lang']['somegroup']\
+        .hasOwnProperty('someattr'), true)
+      assert.equal(clients[k]['java.lang']['somegroup']['someattr']\
+        .hasOwnProperty('data'), true)
+      assert.equal(Object.keys(
+        clients[k]['java.lang']['somegroup']['someattr']['data']).length, 0)
     done()
 
   it "should be able to retrieve jolokia stats for the given attributes"

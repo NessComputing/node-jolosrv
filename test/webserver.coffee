@@ -190,10 +190,31 @@ describe 'WebServer', ->
       graph_attrs.dmax.should.equal 180
       done()
 
+  it "should be able to retrieve detailed info for a client", (done) ->
+    url_href = "http://localhost:1234/jolokia/"
+    attrs = 
+      "java.lang":
+        "name=ConcurrentMarkSweep,type=GarbageCollector":
+          CollectionTime:
+            graph:
+              host: "examplehost.domain.com"
+              units: "gc/sec"
+              slope: "both"
+              tmax: 60
+              dmax: 180
+
+    rest.postJson("#{url}/clients",
+      name: "bob"
+      url: url_href
+      attributes: attrs
+    ).on 'complete', (data) =>
+      rest.get("#{url}/clients/bob").on 'complete', (data) =>
+        done()
+
+  it "should be able to retrieve a detailed list of clients"
+
   it "should be able to remove attributes from a client"
     # rest.postJson("#{url}/clients",
     #   name: "bob"
     #   url: url_href
     # ).on 'complete', (data) =>
-
-  it "should be able to retrieve a detailed list of clients"

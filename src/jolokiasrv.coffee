@@ -9,7 +9,7 @@ gwrapper = require './gmetric_wrapper'
 ###
 class JolokiaSrv
   constructor: (@interval) ->
-    @interval or= 10
+    @interval or= 15
     @jclients = new Object()
     @gmond_interval_id = null
     @config = Config.get()
@@ -28,27 +28,14 @@ class JolokiaSrv
       gw: new gwrapper(@config.get('gmetric'), @config.get('gPort'), true)
 
   ###*
-   * Add a new jolokia lookup client into the hash.
-   * @param {String} (name) The name of the client
-   * @param {String} (attr) The name of the attribute lookup
-   * @param {Object} (data) The attribute lookup information
-   * @return {Object} The added attribute
-  ###
-  add_attribute: (name, component, group, attr, data) =>
-    @jclients[name] or= new Object()
-    @jclients[name][component] or= new Object()
-    @jclients[name][component][group] or= new Object()
-    @jclients[name][component][group][attr] = data || new Object()
-
-  ###*
    * Removes all jolokia attributes for the given client group
    * @param {String} (name) The name of the client to remove attributes of
    * @param {String} (group) The name of the group to remove attributes of
   ###
   remove_attributes: (name, group) =>
     return unless @jclients[name]
-    return unless @jclients[name][group]
-    delete @jclients[name][group]
+    return unless @jclients[name]['attributes'][group]
+    delete @jclients[name]['attributes'][group]
 
   ###*
    * List the current jolokia clients.
@@ -72,15 +59,17 @@ class JolokiaSrv
    * @return {Object} The hash representing the client info
   ###
   info_client: (name) =>
-    @jclients[name]
+    @jclients[name]['attributes']
 
   ###*
    * Returns detailed information for all clients.
    * @return {Object} The hash representing the all client info
   ###
   info_all_clients: () =>
-    keys = Object.keys(@jclients)
-    # async.map
+    clients = new Object()
+    for key in Object.keys(@jclients)
+      clients[key] = @info_client(key)
+    clients
 
   ###*
    * Starts up the gmond metric spooler.

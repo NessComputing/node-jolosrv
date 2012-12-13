@@ -42,10 +42,14 @@ class WebServer
     @app.get '/favicon.ico', (req, res, next) =>
       res.json 404, "No favicon exists."
 
-    # List all of the current clients.
+    # List all of the current clients. (Details if info=true)
     @app.get '/clients', (req, res, next) =>
-      res.json 200,
-        clients: @jsrv.list_clients()
+      if "info" in req.query and req.query.all == 'true'
+        res.json 200,
+          clients: @jsrv.info_all_clients()
+      else
+        res.json 200,
+          clients: @jsrv.list_clients()
 
     # Add/update a client.
     @app.post '/clients', (req, res, next) =>
@@ -60,6 +64,15 @@ class WebServer
         name: client.name
         url: client.url
         attributes: cl.attributes
+
+    # Get details for a given client.
+    @app.get '/clients/:client', (req, res, next) =>
+      client = req.params.client
+      data = @jsrv.info_client(client)
+      res.json 200, message: "ok"
+
+    # # Remove attributes for a client.
+    # @app.del '/clients/:client/attributes'
 
     # Delete a client.
     @app.del '/clients/:client', (req, res, next) =>
