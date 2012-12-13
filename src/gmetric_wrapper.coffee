@@ -4,10 +4,12 @@ gmetricsrv = require 'gmetric'
  * Gmetric wrapper
 ###
 class GmetricWrapper
-  constructor: (@interval) ->
-    @valid_counter_types = ['gauge, counter, derive, absolute']
+  constructor: (host, port, spoof) ->
+    @counter_types = ['gauge, counter, derive, absolute']
+    @typestrings = ['string', 'uint16', 'int16', 
+                    'uint32', 'int32', 'float', 'double']
     @gmetric = null
-    @gmond_interval_id = null
+    @configure_gmetric(host, port, spoof)
 
   ###*
    * Returns the integer lookup for the given slope type for gmetric.
@@ -48,9 +50,7 @@ class GmetricWrapper
       uint32: "unsigned_int"
       int: "int"
       int32: "int"
-      # BORKEN! Refs: https://github.com/jbuchbinder/node-gmetric/pull/2
-      float: "front"
-      front: "front"
+      float: "float"
       double: "double"
 
     name = value_lookup[name.toString().toLowerCase()]
@@ -58,25 +58,14 @@ class GmetricWrapper
     gmetricsrv["VALUE_#{name.toUpperCase()}"]
 
   ###*
-   * Sets up the gmond metric spooler.
+   * Configures the gmetric service object.
    * @param {String} (host) The target gmond host
    * @param {String} (port) The target gmond port
-   * @param {String} (spoof) The spoofed hostname to act as
+   * @param {String} (spoof) 
+   * @return {Object} The configured gmetric object
   ###
-  setup_gmond: (host, port, spoof) =>
-    @gmetric = new gmetricsrv()
-    @gmetric.gmetric(host, port, spoof)
-    return unless @interval
-    @gmond_interval_id = setInterval () =>
-      if @gmetric
-        # TODO: Finish sendMetric
-        @gmetric.sendMetric()
-    , @interval
-
-  ###*
-   * Stops the gmond metric spooler.
-  ###
-  stop_gmond: () =>
-    if @gmond_interval_id then clearInterval(@gmond_interval_id)
+  configure_gmetric: (host, port, spoof) =>
+    if host and port and spoof
+      @gmetric = gmetricsrv.gmetric(host, port, spoof)
 
 module.exports = GmetricWrapper

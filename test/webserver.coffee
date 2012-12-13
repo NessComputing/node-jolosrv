@@ -25,10 +25,9 @@ describe 'WebServer', ->
       done()
 
   it "should be able to add a client", (done) ->
-    rest.post("#{url}/clients",
-      data:
-        name: "bob"
-        url: "http://localhost:1234/jolokia/"
+    rest.postJson("#{url}/clients",
+      name: "bob"
+      url: "http://localhost:1234/jolokia/"
     ).on 'complete', (data) =>
       data.name.should.equal 'bob'
       data.url.should.equal 'http://localhost:1234/jolokia/'
@@ -36,35 +35,31 @@ describe 'WebServer', ->
       done()
 
   it "throws 400 when adding a client without a name", (done) ->
-    rest.post("#{url}/clients",
-      data:
-        url: "http://localhost:1234/jolokia/"
+    rest.postJson("#{url}/clients",
+      url: "http://localhost:1234/jolokia/"
     ).on 'complete', (data, res) =>
       res.statusCode.should.equal 400
       done()
 
   it "throws 400 when adding a client without a url", (done) ->
-    rest.post("#{url}/clients",
-      data:
-        name: "bob"
+    rest.postJson("#{url}/clients",
+      name: "bob"
     ).on 'complete', (data, res) =>
       res.statusCode.should.equal 400
       done()
 
   it "should be able to update a client", (done) ->
-    rest.post("#{url}/clients",
-      data:
-        name: "bob"
-        url: "http://localhost:1234/jolokia/"
+    rest.postJson("#{url}/clients",
+      name: "bob"
+      url: "http://localhost:1234/jolokia/"
     ).on 'complete', (data) =>
       data.name.should.equal 'bob'
       data.url.should.equal 'http://localhost:1234/jolokia/'
       Object.keys(data.attributes).length.should.equal 0
 
-      rest.post("#{url}/clients",
-        data:
-          name: "bob"
-          url: "http://localhost:1235/jolokia/"
+      rest.postJson("#{url}/clients",
+        name: "bob"
+        url: "http://localhost:1235/jolokia/"
       ).on 'complete', (data) =>
         data.name.should.equal 'bob'
         data.url.should.equal 'http://localhost:1235/jolokia/'
@@ -72,10 +67,9 @@ describe 'WebServer', ->
         done()
 
   it "should be able to return a list of clients", (done) ->
-    rest.post("#{url}/clients",
-      data:
-        name: "bob"
-        url: "http://localhost:1234/jolokia/"
+    rest.postJson("#{url}/clients",
+      name: "bob"
+      url: "http://localhost:1234/jolokia/"
     ).on 'complete', (data) =>
       data.name.should.equal 'bob'
       data.url.should.equal 'http://localhost:1234/jolokia/'
@@ -86,10 +80,9 @@ describe 'WebServer', ->
         done()
 
   it "should be able to remove a client", (done) ->
-    rest.post("#{url}/clients",
-      data:
-        name: "bob"
-        url: "http://localhost:1234/jolokia/"
+    rest.postJson("#{url}/clients",
+      name: "bob"
+      url: "http://localhost:1234/jolokia/"
     ).on 'complete', (data) =>
       data.name.should.equal 'bob'
       data.url.should.equal 'http://localhost:1234/jolokia/'
@@ -98,10 +91,9 @@ describe 'WebServer', ->
         data.clients.should.include 'bob'
         Object.keys(data.clients).length.should.equal 1
 
-        rest.post("#{url}/clients",
-          data:
-            name: "joe"
-            url: "http://localhost:1235/jolokia/"
+        rest.postJson("#{url}/clients",
+          name: "joe"
+          url: "http://localhost:1235/jolokia/"
         ).on 'complete', (data) =>
           data.name.should.equal 'joe'
           data.url.should.equal 'http://localhost:1235/jolokia/'
@@ -117,18 +109,33 @@ describe 'WebServer', ->
               Object.keys(data.clients).length.should.equal 1
               done()
 
-  it "should be able to add attributes to a client"
-    # rest.post("#{url}/clients",
-    #   data:
-    #     name: "bob"
-    #     url: url_href
+  it "should be able to add attributes to a client" #, (done) ->
+    # url_href = "http://localhost:1234/jolokia/"
+    # attrs = 
+    #   "java.lang":
+    #     "name=ConcurrentMarkSweep,type=GarbageCollector":
+    #       graph:
+    #         host: "examplehost.domain.com"
+    #         units: "gc/sec"
+    #         slope: "both"
+    #         tmax: 60
+    #         dmax: 180
+
+    # rest.postJson("#{url}/clients",
+    #   name: "bob"
+    #   url: url_href
+    #   attributes: attrs
+
     # ).on 'complete', (data) =>
+    #   data.name.should.equal 'bob'
+    #   data.url.should.equal 'http://localhost:1234/jolokia/'
+    #   console.log data.attributes
+    #   done()
 
   it "should be able to remove attributes from a client"
-    # rest.post("#{url}/clients",
-    #   data:
-    #     name: "bob"
-    #     url: url_href
+    # rest.postJson("#{url}/clients",
+    #   name: "bob"
+    #   url: url_href
     # ).on 'complete', (data) =>
 
   it "should be able to retrieve a detailed list of clients"

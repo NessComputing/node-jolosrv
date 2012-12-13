@@ -29,8 +29,6 @@ describe 'GmetricWrapper', ->
     gm.value_type("short").should.equal 3
     gm.value_type("uint").should.equal 4
     gm.value_type("int").should.equal 5
-    
-    # BORKEN! Refs: https://github.com/jbuchbinder/node-gmetric/pull/2
     gm.value_type("float").should.equal 6
     gm.value_type("double").should.equal 7
     done()
