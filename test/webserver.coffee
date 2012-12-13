@@ -209,12 +209,116 @@ describe 'WebServer', ->
       attributes: attrs
     ).on 'complete', (data) =>
       rest.get("#{url}/clients/bob").on 'complete', (data) =>
+        data = data.info
+        assert.equal(data.hasOwnProperty('java.lang'), true)
+        assert.equal(data['java.lang'].hasOwnProperty(
+          'name=ConcurrentMarkSweep,type=GarbageCollector'), true)
+        assert.equal(data['java.lang']\
+          ['name=ConcurrentMarkSweep,type=GarbageCollector']\
+          .hasOwnProperty('CollectionTime'), true)
+        assert.equal(data['java.lang']\
+          ['name=ConcurrentMarkSweep,type=GarbageCollector']\
+          ['CollectionTime'].hasOwnProperty('graph'), true)
+
+        graph_attrs = data['java.lang']\
+        ['name=ConcurrentMarkSweep,type=GarbageCollector']\
+        ['CollectionTime']['graph']
+        graph_attrs.host.should.equal "examplehost.domain.com"
+        graph_attrs.units.should.equal "gc/sec"
+        graph_attrs.slope.should.equal "both"
+        graph_attrs.tmax.should.equal 60
+        graph_attrs.dmax.should.equal 180
         done()
 
-  it "should be able to retrieve a detailed list of clients"
+  it "should be able to retrieve a detailed list of clients", (done) ->
+    url_href = "http://localhost:1234/jolokia/"
+    attrs = 
+      "java.lang":
+        "name=ConcurrentMarkSweep,type=GarbageCollector":
+          CollectionTime:
+            graph:
+              host: "examplehost.domain.com"
+              units: "gc/sec"
+              slope: "both"
+              tmax: 60
+              dmax: 180
 
-  it "should be able to remove attributes from a client"
-    # rest.postJson("#{url}/clients",
-    #   name: "bob"
-    #   url: url_href
-    # ).on 'complete', (data) =>
+    rest.postJson("#{url}/clients",
+      name: "bob"
+      url: url_href
+      attributes: attrs
+    ).on 'complete', (data) =>
+      rest.postJson("#{url}/clients",
+        name: "joe"
+        url: url_href
+        attributes: attrs
+      ).on 'complete', (data) =>      
+        rest.get("#{url}/clients"
+        , query: { info: true }).on 'complete', (data) =>
+          clients = data.clients
+          for k in ['bob', 'joe']
+            assert.equal(clients[k].hasOwnProperty('java.lang'), true)
+            assert.equal(clients[k]['java.lang'].hasOwnProperty(
+              'name=ConcurrentMarkSweep,type=GarbageCollector'), true)
+            assert.equal(clients[k]['java.lang']\
+              ['name=ConcurrentMarkSweep,type=GarbageCollector']\
+              .hasOwnProperty('CollectionTime'), true)
+            assert.equal(clients[k]['java.lang']\
+              ['name=ConcurrentMarkSweep,type=GarbageCollector']\
+              ['CollectionTime'].hasOwnProperty('graph'), true)
+
+            graph_attrs = clients[k]['java.lang']\
+              ['name=ConcurrentMarkSweep,type=GarbageCollector']\
+              ['CollectionTime']['graph']
+            graph_attrs.host.should.equal "examplehost.domain.com"
+            graph_attrs.units.should.equal "gc/sec"
+            graph_attrs.slope.should.equal "both"
+            graph_attrs.tmax.should.equal 60
+            graph_attrs.dmax.should.equal 180
+          done()
+
+  it "should be able to remove attributes from a client", (done) ->
+    url_href = "http://localhost:1234/jolokia/"
+    attrs = 
+      "java.lang":
+        "name=ConcurrentMarkSweep,type=GarbageCollector":
+          CollectionTime:
+            graph:
+              host: "examplehost.domain.com"
+              units: "gc/sec"
+              slope: "both"
+              tmax: 60
+              dmax: 180
+
+    rest.postJson("#{url}/clients",
+      name: "bob"
+      url: url_href
+      attributes: attrs
+    ).on 'complete', (data) =>
+      data.name.should.equal 'bob'
+      data.url.should.equal 'http://localhost:1234/jolokia/'
+      assert.equal(data.attributes.hasOwnProperty('java.lang'), true)
+      assert.equal(data.attributes['java.lang'].hasOwnProperty(
+        'name=ConcurrentMarkSweep,type=GarbageCollector'), true)
+      assert.equal(data.attributes['java.lang']\
+        ['name=ConcurrentMarkSweep,type=GarbageCollector']\
+        .hasOwnProperty('CollectionTime'), true)
+      assert.equal(data.attributes['java.lang']\
+        ['name=ConcurrentMarkSweep,type=GarbageCollector']\
+        ['CollectionTime'].hasOwnProperty('graph'), true)
+
+      graph_attrs = data.attributes['java.lang']\
+        ['name=ConcurrentMarkSweep,type=GarbageCollector']\
+        ['CollectionTime']['graph']
+      graph_attrs.host.should.equal "examplehost.domain.com"
+      graph_attrs.units.should.equal "gc/sec"
+      graph_attrs.slope.should.equal "both"
+      graph_attrs.tmax.should.equal 60
+      graph_attrs.dmax.should.equal 180
+      rest.del("#{url}/clients/bob/attributes").on 'complete', (data) =>
+        rest.get("#{url}/clients"
+        , query: { info: true }).on 'complete', (data) =>
+          clients = data.clients
+          assert.equal(Object.keys(clients.bob).length, 0)
+          done()
+

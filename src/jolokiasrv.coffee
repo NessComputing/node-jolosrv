@@ -28,14 +28,14 @@ class JolokiaSrv
       gw: new gwrapper(@config.get('gmetric'), @config.get('gPort'), true)
 
   ###*
-   * Removes all jolokia attributes for the given client group
+   * Removes all jolokia attributes for the given client.
    * @param {String} (name) The name of the client to remove attributes of
-   * @param {String} (group) The name of the group to remove attributes of
   ###
-  remove_attributes: (name, group) =>
+  remove_attributes: (name) =>
     return unless @jclients[name]
-    return unless @jclients[name]['attributes'][group]
-    delete @jclients[name]['attributes'][group]
+    return unless Object.keys(@jclients[name]['attributes']).length > 0
+    for key in Object.keys(@jclients[name]['attributes'])
+      delete @jclients[name]['attributes'][key]
 
   ###*
    * List the current jolokia clients.
@@ -59,7 +59,11 @@ class JolokiaSrv
    * @return {Object} The hash representing the client info
   ###
   info_client: (name) =>
-    @jclients[name]['attributes']
+    client = @jclients[name]
+    if client
+      client['attributes']
+    else
+      null
 
   ###*
    * Returns detailed information for all clients.

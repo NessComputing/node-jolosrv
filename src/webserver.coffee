@@ -44,7 +44,7 @@ class WebServer
 
     # List all of the current clients. (Details if info=true)
     @app.get '/clients', (req, res, next) =>
-      if "info" in req.query and req.query.all == 'true'
+      if "info" in Object.keys(req.query) and req.query.info == 'true'
         res.json 200,
           clients: @jsrv.info_all_clients()
       else
@@ -69,10 +69,19 @@ class WebServer
     @app.get '/clients/:client', (req, res, next) =>
       client = req.params.client
       data = @jsrv.info_client(client)
-      res.json 200, message: "ok"
+      if data == null
+        return res.json 404, message: "Client does not exist."
+      res.json 200, info: data
 
-    # # Remove attributes for a client.
-    # @app.del '/clients/:client/attributes'
+    # Remove attributes for a client.
+    @app.del '/clients/:client/attributes', (req, res, next) =>
+      client = req.params.client
+      data = @jsrv.info_client(client)
+      if data == null
+        return res.json 404, message: "Client does not exist."
+      @jsrv.remove_attributes(client)
+      data = @jsrv.info_client(client)
+      res.json 200, info: data
 
     # Delete a client.
     @app.del '/clients/:client', (req, res, next) =>

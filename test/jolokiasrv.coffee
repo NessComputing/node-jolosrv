@@ -135,7 +135,7 @@ describe 'JolokiaSrv', ->
       ['name=ConcurrentMarkSweep,type=GarbageCollector'].hasOwnProperty(
         'CollectionTime'), true)
 
-    js.remove_attributes('test', 'java.lang')
+    js.remove_attributes('test')
     client = js.jclients['test']
     Object.keys(client['attributes']).length.should.equal 0
     done()
