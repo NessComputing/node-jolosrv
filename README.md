@@ -5,62 +5,68 @@ A jolokia JMX to ganglia service
 
 ## REST Interface
 
-<table>
-  <tr>
-    <th>Command</th><th>Method</th><th>Url</th><th>Example</th>
-  </tr>
-  <tr>
-    <td>version</td>
-    <td>GET</td>
-    <td>/</td>
-    <td>curl -sL localhost:3000/</td>
-  </tr>
-  <tr>
-    <td>list clients</td>
-    <td>GET</td>
-    <td>/clients/</td>
-    <td>curl -sL localhost:3000/clients</td>
-  </tr>
-  <tr>
-    <td>create client</td>
-    <td>POST</td>
-    <td>/clients/<code>client</code></td>
-    <td>curl -sL -H "Content-Type: application/json" -X POST <br/>localhost:3000/clients/<code>client</code><br />-d '{"name":"bob","url":"http://localhost:1234/jolokia"}'</td>
-  </tr>
-  <tr>
-    <td>update client</td>
-    <td>POST</td>
-    <td>/clients/<code>client</code></td>
-    <td>curl -sL -H "Content-Type: application/json" -X POST <br />localhost:3000/clients/<code>client</code><br />-d '{"name":"bob","url":"http://localhost:1234/jolokia",<br/>
-      "attributes": {"java.lang": {"name=ConcurrentMarkSweep,type=GarbageCollector":<br />
-      {"CollectionTime":{"graph":{"host":"examplehost.domain.com",<br />
-      "units":"gc/sec","slope":"both","tmax":60,"dmax":180}}}}}}'</td>
-  </tr>
-  <tr>
-    <td>client info</td>
-    <td>GET</td>
-    <td>/clients/<code>client</code></td>
-    <td>curl -sL localhost:3000/clients/<code>client</code></td>
-  </tr>
-  <tr>
-    <td>all clients info</td>
-    <td>GET</td>
-    <td>/clients/<code>client</code></td>
-    <td>curl -sL localhost:3000/clients -d 'info=true'</td>
-  </tr>
-  <tr>
-    <td>remove attribs</td>
-    <td>DELETE</td>
-    <td>/clients/<code>client</code>/attributes</td>
-    <td>curl -sL -X DELETE localhost:3000/clients/<code>client</code>/attributes</td>
-  </tr>
-  <tr>
-    <td>remove client</td>
-    <td>DELETE</td>
-    <td>/clients/<code>client</code></td>
-    <td>curl -sL -X DELETE localhost:3000/clients/<code>client</code></td>
-  </tr>
-</table>
+Getting the version
+```
+curl -sL localhost:3000
+```
+
+Getting the list of clients
+```
+curl -sL localhost:3000/clients
+```
+
+Creating a client
+```
+curl -sL -H "Content-Type: application/json" -X POST localhost:3000/clients -d '
+{
+  "name": "zoidberg",
+  "url": "http://localhost:1234/jolokia"
+}'
+```
+
+Updating a client
+```
+curl -sL -H "Content-Type: application/json" -X POST localhost:3000/clients -d '
+{
+  "name": "zoidberg",
+  "url": "http://localhost:1234/jolokia",
+  "attributes": {
+    "java.lang": {
+      "name=ConcurrentMarkSweep,type=GarbageCollector": {
+        "CollectionTime": {
+          "graph": {
+            "host": "examplehost.domain.com",
+            "units": "gc/sec",
+            "slope": "both",
+            "tmax": 60,
+            "dmax": 180
+          }
+        }
+      }
+    }
+  }
+}'
+```
+
+Getting detailed information for a client
+```
+curl -sL localhost:3000/clients/zoidberg
+```
+
+Getting detailed information for all clients
+```
+curl -sL localhost:3000/clients/zoidberg -d 'info=true'
+```
+
+Removing attributes for a client
+```
+curl -sL -X DELETE localhost:3000/clients/zoidberg/attributes
+```
+
+Removing a client
+```
+curl -sL -X DELETE localhost:3000/clients/zoidberg
+```
 
 ## Code Status
 
