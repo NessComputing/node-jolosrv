@@ -25,34 +25,34 @@ A jolokia JMX to ganglia service
     <td>create client</td>
     <td>POST</td>
     <td>/clients/<code>client</code></td>
-    <td>curl -sL -H "Content-Type: application/json" -X POST localhost:3000/clients/<code>client</code> -d '{"name":"bob","url":"http://localhost:1234/jolokia"}'</td>
+    <td>curl -sL -H "Content-Type: application/json" -X POST <br/>localhost:3000/clients/<code>client</code><br />-d '{"name":"bob","url":"http://localhost:1234/jolokia"}'</td>
   </tr>
   <tr>
-    <td>update client<br />(adding attributes)</td>
+    <td>update client</td>
     <td>POST</td>
     <td>/clients/<code>client</code></td>
-    <td>curl -sL -H "Content-Type: application/json" -X POST localhost:3000/clients/<code>client</code> -d '{"name":"bob","url":"http://localhost:1234/jolokia","attributes": {"java.lang": {"name=ConcurrentMarkSweep,type=GarbageCollector":{"CollectionTime":{"graph":{"host":"examplehost.domain.com","units":"gc/sec","slope":"both","tmax":60,"dmax":180}}}}}}'</td>
+    <td>curl -sL -H "Content-Type: application/json" -X POST <br />localhost:3000/clients/<code>client</code><br />-d '{"name":"bob","url":"http://localhost:1234/jolokia","attributes": {"java.lang": {"name=ConcurrentMarkSweep,type=GarbageCollector":{"CollectionTime":{"graph":{"host":"examplehost.domain.com","units":"gc/sec","slope":"both","tmax":60,"dmax":180}}}}}}'</td>
   </tr>
   <tr>
-    <td>show client info</td>
+    <td>client info</td>
     <td>GET</td>
     <td>/clients/<code>client</code></td>
     <td>curl -sL localhost:3000/clients/<code>client</code></td>
   </tr>
   <tr>
-    <td>show all clients info</td>
+    <td>all clients info</td>
     <td>GET</td>
     <td>/clients/<code>client</code></td>
     <td>curl -sL localhost:3000/clients -d 'info=true'</td>
   </tr>
   <tr>
-    <td>remove attributes from a client</td>
+    <td>remove attribs</td>
     <td>DELETE</td>
     <td>/clients/<code>client</code>/attributes</td>
     <td>curl -sL -X DELETE localhost:3000/clients/<code>client</code>/attributes</td>
   </tr>
   <tr>
-    <td>remove a client</td>
+    <td>remove client</td>
     <td>DELETE</td>
     <td>/clients/<code>client</code></td>
     <td>curl -sL -X DELETE localhost:3000/clients/<code>client</code></td>
