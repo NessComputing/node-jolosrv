@@ -31,7 +31,10 @@ A jolokia JMX to ganglia service
     <td>update client</td>
     <td>POST</td>
     <td>/clients/<code>client</code></td>
-    <td>curl -sL -H "Content-Type: application/json" -X POST <br />localhost:3000/clients/<code>client</code><br />-d '{"name":"bob","url":"http://localhost:1234/jolokia","attributes": {"java.lang": {"name=ConcurrentMarkSweep,type=GarbageCollector":{"CollectionTime":{"graph":{"host":"examplehost.domain.com","units":"gc/sec","slope":"both","tmax":60,"dmax":180}}}}}}'</td>
+    <td>curl -sL -H "Content-Type: application/json" -X POST <br />localhost:3000/clients/<code>client</code><br />-d '{"name":"bob","url":"http://localhost:1234/jolokia",<br/>
+      "attributes": {"java.lang": {"name=ConcurrentMarkSweep,type=GarbageCollector":<br />
+      {"CollectionTime":{"graph":{"host":"examplehost.domain.com",<br />
+      "units":"gc/sec","slope":"both","tmax":60,"dmax":180}}}}}}'</td>
   </tr>
   <tr>
     <td>client info</td>
