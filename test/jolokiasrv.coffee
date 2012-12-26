@@ -1,5 +1,4 @@
 rest = require 'restler'
-dgram = require 'dgram'
 
 JolokiaSrv = require '../src/jolokiasrv'
 
@@ -66,9 +65,8 @@ describe 'JolokiaSrv', ->
 
     assert.equal(js.jclients.hasOwnProperty('test'), true)
     client = js.jclients['test']
-    Object.keys(client).length.should.equal 3
+    Object.keys(client).length.should.equal 2
     assert.equal(client.hasOwnProperty('client'), true)
-    assert.equal(client.hasOwnProperty('gw'), true)
     assert.equal(client.hasOwnProperty('attributes'), true)
     assert.equal(client['attributes'].hasOwnProperty('java.lang'), true)
     assert.equal(
@@ -96,9 +94,8 @@ describe 'JolokiaSrv', ->
 
     assert.equal(js.jclients.hasOwnProperty('test'), true)
     client = js.jclients['test']
-    Object.keys(client).length.should.equal 3
+    Object.keys(client).length.should.equal 2
     assert.equal(client.hasOwnProperty('client'), true)
-    assert.equal(client.hasOwnProperty('gw'), true)
     assert.equal(client.hasOwnProperty('attributes'), true)
     assert.equal(client['attributes'].hasOwnProperty('java.lang'), true)
     assert.equal(
@@ -125,7 +122,7 @@ describe 'JolokiaSrv', ->
 
     assert.equal(js.jclients.hasOwnProperty('test'), true)
     client = js.jclients['test']
-    Object.keys(client).length.should.equal 3
+    Object.keys(client).length.should.equal 2
     assert.equal(client['attributes'].hasOwnProperty('java.lang'), true)
     assert.equal(
       client['attributes']['java.lang'].hasOwnProperty(
@@ -184,18 +181,3 @@ describe 'JolokiaSrv', ->
       assert.equal(Object.keys(
         clients[k]['java.lang']['somegroup']['someattr']['data']).length, 0)
     done()
-
-  it "should be able to retrieve jolokia stats for the given attributes"
-
-  it "should be able to update a gmond endpoint on an interval"
-    # socksrv = dgram.createSocket("udp4")
-    # receive_count = 0
-    # socksrv.on 'message', (msg, rinfo) =>
-    #   receive_count += 1
-    #   console.log "server got: #{msg} from #{rinfo.address}:#{rinfo.port}"
-    #   if receive_count >= 3
-    #     socksrv.close()
-    #     done()
-    #
-    # socksrv.bind(43278)
-    #

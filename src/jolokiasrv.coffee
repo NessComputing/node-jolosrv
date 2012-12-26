@@ -1,8 +1,8 @@
 jolokia = require 'jolokia-client'
 async = require 'async'
+Gmetric = require 'gmetric'
 
 Config = require './config'
-gwrapper = require './gmetric_wrapper'
 
 ###*
  * Jolokia server client wrapper.
@@ -25,7 +25,6 @@ class JolokiaSrv
     @jclients[name] =
       client: new jolokia(url)
       attributes: attributes || new Object()
-      gw: new gwrapper(@config.get('gmetric'), @config.get('gPort'), true)
 
   ###*
    * Removes all jolokia attributes for the given client.
