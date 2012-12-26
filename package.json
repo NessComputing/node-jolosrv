@@ -15,7 +15,7 @@
     "express":"3.0.x",
     "async": "0.1.x",
     "jolokia-client": "0.0.x",
-    "gmetric": "0.0.x",
+    "gmetric": "0.1.x",
     "pkginfo": "0.2.x"
   },
   "devDependencies": {
