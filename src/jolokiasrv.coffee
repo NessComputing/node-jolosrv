@@ -16,9 +16,9 @@ class JolokiaSrv
 
   ###*
    * Add a new jolokia lookup client into the hash.
-   * @param {String} (name) The name of the client to add
-   * @param {String} (url) The jolokia url for the client
-   * @param {Object} (attributes) The attributes to lookup for the client
+   * @param  {String} (name) The name of the client to add
+   * @param  {String} (url) The jolokia url for the client
+   * @param  {Object} (attributes) The attributes to lookup for the client
    * @return {Object} The jolokia client that was added
   ###
   add_client: (name, url, attributes) =>
@@ -45,7 +45,7 @@ class JolokiaSrv
 
   ###*
    * Removes a jolokia client from the hash.
-   * @param {String} (name) The name of the client to remove
+   * @param  {String} (name) The name of the client to remove
    * @return {String} The list of remaining clients
   ###
   remove_client: (name) =>
@@ -54,7 +54,7 @@ class JolokiaSrv
 
   ###*
    * Returns detailed information for the given client.
-   * @param {String} (name) The name of the client to lookup
+   * @param  {String} (name) The name of the client to lookup
    * @return {Object} The hash representing the client info
   ###
   info_client: (name) =>
@@ -76,13 +76,8 @@ class JolokiaSrv
 
   ###*
    * Starts up the gmond metric spooler.
-   * @param {String} (host) The target gmond host
-   * @param {String} (port) The target gmond port
-   * @param {Boolean} (spoof) Whether or not the hostname is spoofed
   ###
   start_gmond: (host, port, spoof) =>
-    @gmetric = new gmetricsrv()
-    @gmetric.gmetric(host, port, spoof)
     return unless @interval
     @gmond_interval_id = setInterval () =>
       @submit_metrics()
@@ -96,21 +91,16 @@ class JolokiaSrv
 
   ###*
    * Submits gmetric data to the gmond target.
-   * @param {Object} (ginfo) Where ginfo is the following:
    * ex:  { host:  'exhost.domain.com',
    *        name:  'mygraphname',
    *        units: 'percentage', 
-   *        type:  'int',
+   *        type:  'int32',
    *        slope: 'both',
    *        tmax:   60,
    *        dmax:   120,
    *        group:  'mygraph_group' }
   ###
-  submit_metrics: (ginfo, value) =>
-    ginfo['tmax'] or= 60
-    ginfo['dmax'] or= 120
-    if @gmetric
-      # TODO: Finish sendMetric
-      @gmetric.sendMetric()
+  submit_metrics: =>
+    clients = @info_all_clients()
 
 module.exports = JolokiaSrv
