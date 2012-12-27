@@ -65,6 +65,23 @@ class JolokiaSrv
       null
 
   ###*
+   * Generates a query array for the jolokia client
+   * @param  {String} (name) The name of the client to query
+   * @return {Array}  The list of items to query
+  ###
+  generate_client_query: (name) =>
+    attrs = @info_client(name)
+    query_items = []
+    unless attrs == null
+      mbeans = Object.keys(attrs)
+      if mbeans == null or mbeans.length == 0 then return query_items
+      for m in mbeans
+        unless attrs[m] == null or attrs[m].length == 0
+          for attribute in Object.keys(attrs[m])
+            query_items.push({ mbean: m, attribute: attribute })
+      return query_items
+
+  ###*
    * Returns detailed information for all clients.
    * @return {Object} The hash representing the all client info
   ###
