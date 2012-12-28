@@ -82,6 +82,18 @@ class JolokiaSrv
       return query_items
 
   ###*
+   * Queries jolokia mbeans for a given client and updates their values.
+   * @param {String} (name) The name of the client to query
+   * @param {Function} (fn) The callback function
+  ###
+  query_jolokia: (name, fn) =>
+    query = @generate_client_query(name)
+    if query == [] then return null
+    client = @jclients[name].client
+    client.read query, (response) =>
+      fn(null, response.value)
+
+  ###*
    * Returns detailed information for all clients.
    * @return {Object} The hash representing the all client info
   ###

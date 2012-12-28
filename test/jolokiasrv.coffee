@@ -1,4 +1,6 @@
 rest = require 'restler'
+express = require 'express'
+http = require 'http'
 
 JolokiaSrv = require '../src/jolokiasrv'
 
@@ -189,6 +191,41 @@ describe 'JolokiaSrv', ->
       Object.keys(query[i]).should.include('attribute')
     done()
 
-  it "should be able to periodically update metrics for a given stat"
+  it "should be able to read and update metrics for an attribute", (done) =>
+    app = express()
+    app.use express.bodyParser()
+    app.post '/jolokia', (req, res, next) =>
+      return_package = 
+        value: 46060
+        request: 
+          type: 'read'
+          mbean: 'java.lang:name=ConcurrentMarkSweep,type=GarbageCollector'
+          attribute: 'CollectionTime'
+        timestamp: 1356650995
+        status: 200
+      res.json 200, return_package
+
+    srv = http.createServer(app)
+    srv.listen(47432)
+
+    post_data = () =>
+      url_href = 'http://localhost:47432/jolokia/'
+      js.add_client 'test', url_href
+      , 'java.lang:name=ConcurrentMarkSweep,type=GarbageCollector':
+        'CollectionTime':
+          graph:
+            host: "examplehost.domain.com"
+            units: "gc/sec"
+            slope: "both"
+            tmax: 60
+            dmax: 180
+      js.query_jolokia 'test', (err, resp) =>
+        resp.should.equal 46060
+        srv.close()
+        done()
+
+    setTimeout(post_data, 5)
+
+  it "should be able to read child metrics for an attribute"
 
   it "should be able to submit metrics for a given client"
