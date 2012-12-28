@@ -16,15 +16,17 @@ class JolokiaSrv
 
   ###*
    * Add a new jolokia lookup client into the hash.
-   * @param  {String} (name) The name of the client to add
-   * @param  {String} (url) The jolokia url for the client
-   * @param  {Object} (attributes) The attributes to lookup for the client
-   * @return {Object} The jolokia client that was added
+   * @param  {String}  (name) The name of the client to add
+   * @param  {String}  (url) The jolokia url for the client
+   * @param  {Object}  (attributes) The attributes to lookup for the client
+   * @param  {Boolean} (gc_info) Whether or not to use default gc info
+   * @return {Object}  The jolokia client that was added
   ###
-  add_client: (name, url, attributes) =>
+  add_client: (name, url, attributes, gc_info) =>
     @jclients[name] =
       client: new Jolokia(url)
       attributes: attributes || new Object()
+      gc_info: gc_info || false
 
   ###*
    * Removes all jolokia attributes for the given client.
