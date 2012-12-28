@@ -191,7 +191,7 @@ describe 'JolokiaSrv', ->
       Object.keys(query[i]).should.include('attribute')
     done()
 
-  it "should be able to read and update metrics for an attribute", (done) =>
+  it "should be able to read metrics for an attribute", (done) =>
     app = express()
     app.use express.bodyParser()
     app.post '/jolokia', (req, res, next) =>
@@ -226,6 +226,98 @@ describe 'JolokiaSrv', ->
 
     setTimeout(post_data, 5)
 
-  it "should be able to read child metrics for an attribute"
+  it "should be able to read child metrics for an attribute", (done) =>
+    app = express()
+    app.use express.bodyParser()
+    app.post '/jolokia', (req, res, next) =>
+      return_package = 
+        status: 200
+        timestamp: 1356657870
+        duration: 10
+        request:
+          attribute: 'LastGcInfo'
+          type: 'read'
+          mbean: 'java.lang:name=ParNew,type=GarbageCollector'
+        value:
+          id: 118583
+          memoryUsageBeforeGc: 
+            'Code Cache': 
+              init: 2555904
+              committed: 9764864
+              used: 9589824
+              max: 50331648
+            'CMS Perm Gen': 
+              init: 21757952
+              committed: 75091968
+              used: 44995904
+              max: 268435456
+            'CMS Old Gen': 
+              init: 262406144
+              committed: 1973878784
+              used: 1257080824
+              max: 1973878784
+            'Par Eden Space': 
+              init: 104988672
+              committed: 558432256
+              used: 558432256
+              max: 558432256
+            'Par Survivor Space': 
+              init: 13107200
+              committed: 69730304
+              used: 6333344
+              max: 69730304
+          GcThreadCount: 11,
+          endTime: 521639692
+          startTime: 521639682
+          memoryUsageAfterGc: 
+            'Code Cache': 
+              init: 2555904
+              committed: 9764864
+              used: 9589824
+              max: 50331648
+            'CMS Perm Gen': 
+              init: 21757952
+              committed: 75091968
+              used: 44995904
+              max: 268435456
+            'CMS Old Gen': 
+              init: 262406144
+              committed: 1973878784
+              used: 1257559928
+              max: 1973878784
+            'Par Eden Space':
+              init: 104988672
+              committed: 558432256
+              used: 0
+              max: 558432256
+            'Par Survivor Space': 
+              init: 13107200
+              committed: 69730304
+              used: 8012272
+              max: 69730304
+      res.json 200, return_package
+
+    srv = http.createServer(app)
+    srv.listen(47432)
+
+    post_data = () =>
+      url_href = 'http://localhost:47432/jolokia/'
+      js.add_client 'test', url_href
+      , 'java.lang:name=ConcurrentMarkSweep,type=GarbageCollector':
+        'CollectionTime':
+          graph:
+            host: "examplehost.domain.com"
+            units: "gc/sec"
+            slope: "both"
+            tmax: 60
+            dmax: 180
+      js.query_jolokia 'test', (err, resp) =>
+        resp.memoryUsageAfterGc['Code Cache'].init.should.equal 2555904
+        srv.close()
+        done()
+
+    setTimeout(post_data, 5)
+
+  it "should support default garbage collection metrics"
 
   it "should be able to submit metrics for a given client"

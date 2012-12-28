@@ -1,4 +1,4 @@
-jolokia = require 'jolokia-client'
+Jolokia = require 'jolokia-client'
 async = require 'async'
 Gmetric = require 'gmetric'
 
@@ -23,7 +23,7 @@ class JolokiaSrv
   ###
   add_client: (name, url, attributes) =>
     @jclients[name] =
-      client: new jolokia(url)
+      client: new Jolokia(url)
       attributes: attributes || new Object()
 
   ###*
