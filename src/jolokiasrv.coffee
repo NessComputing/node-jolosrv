@@ -110,6 +110,7 @@ class JolokiaSrv
   ###
   start_gmond: (host, port, spoof) =>
     return unless @interval
+    if @gmond_interval_id then stop_gmond()
     @gmond_interval_id = setInterval () =>
       @submit_metrics()
     , @interval
@@ -118,7 +119,9 @@ class JolokiaSrv
    * Stops the gmond metric spooler.
   ###
   stop_gmond: () =>
-    if @gmond_interval_id then clearInterval(@gmond_interval_id)
+    if @gmond_interval_id
+      clearInterval(@gmond_interval_id)
+      @gmond_interval_id = null
 
   ###*
    * Submits gmetric data to the gmond target.
