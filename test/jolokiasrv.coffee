@@ -1,4 +1,4 @@
-rest = require 'restler'
+rest = require 'request'
 express = require 'express'
 http = require 'http'
 
