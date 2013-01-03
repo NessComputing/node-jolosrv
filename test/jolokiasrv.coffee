@@ -66,7 +66,7 @@ describe 'JolokiaSrv', ->
 
     assert.equal(js.jclients.hasOwnProperty('test'), true)
     client = js.jclients['test']
-    Object.keys(client).should.have.length 3
+    Object.keys(client).should.have.length 2
     assert.equal(client.hasOwnProperty('client'), true)
     assert.equal(client.hasOwnProperty('attributes'), true)
     assert.equal(client['attributes'].hasOwnProperty(
@@ -92,7 +92,7 @@ describe 'JolokiaSrv', ->
 
     assert.equal(js.jclients.hasOwnProperty('test'), true)
     client = js.jclients['test']
-    Object.keys(client).should.have.length 3
+    Object.keys(client).should.have.length 2
     assert.equal(client.hasOwnProperty('client'), true)
     assert.equal(client.hasOwnProperty('attributes'), true)
     assert.equal(client['attributes'].hasOwnProperty(
@@ -117,7 +117,7 @@ describe 'JolokiaSrv', ->
 
     assert.equal(js.jclients.hasOwnProperty('test'), true)
     client = js.jclients['test']
-    Object.keys(client).should.have.length 3
+    Object.keys(client).should.have.length 2
     assert.equal(client['attributes'].hasOwnProperty(
       'java.lang:name=ConcurrentMarkSweep,type=GarbageCollector'), true)
     assert.equal(
