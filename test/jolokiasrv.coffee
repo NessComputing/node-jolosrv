@@ -1,6 +1,7 @@
 rest = require 'request'
 express = require 'express'
 http = require 'http'
+util = require 'util'
 
 JolokiaSrv = require '../src/jolokiasrv'
 
@@ -318,4 +319,59 @@ describe 'JolokiaSrv', ->
 
     setTimeout(post_data, 5)
 
-  it "should support default garbage collection metrics"
+  it "should support parsing an mbean and basic attribute", (done) =>
+    attributes = [
+      mbean: 'java.lang:name=ConcurrentMarkSweep,type=GarbageCollector',
+      attributes: [
+        { name: 'CollectionCount'
+        graph:
+          name: "GC Collection Count"
+          units: "gc count"
+          type: "int32" }
+      ]
+    ]
+    
+    console.log util.inspect(attributes, true, 10)
+    done()
+
+  it "should support parsing an mbean and attribute", (done) =>
+    attributes = [
+      mbean: 'java.lang:type=Memory'
+      attributes: [
+        { name: 'HeapMemoryUsage'
+        composites: [
+          { name: 'init',
+          graph:
+            name: "HeapMemoryUsage_Init"
+            units: "bytes"
+            type: "int32" }
+        ] }
+      ]
+    ]
+
+    console.log util.inspect(attributes, true, 10)
+    done()
+
+  it "should support creating sane attrib objects for a string"
+
+  it "should support creating sane attrib objects for an object"
+
+  it "should support creating sane attrib objects for an array"
+
+  it "should support parsing a basic mbean and multiple attributes"
+
+  it "should support normalizing "
+
+  it "should support multiple mbeans and attributes"
+
+  it "should support sanitizing simple mbean templates"
+
+  it "should read an mbean and return the attribute"
+
+  it "should read an mbean, read the attribute obj, and parse it"
+
+  it "should support templating for metric aggregation"
+
+  it "should support compound templates"
+
+  it "should have sane default graph configurations"
