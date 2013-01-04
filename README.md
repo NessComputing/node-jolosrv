@@ -1,3 +1,4 @@
+[![build status](https://secure.travis-ci.org/seryl/node-jolosrv.png)](http://travis-ci.org/seryl/node-jolosrv)
 node-jolosrv
 ============
 
@@ -67,7 +68,3 @@ Removing a client
 ```
 curl -sL -X DELETE localhost:3000/clients/zoidberg
 ```
-
-## Code Status
-
-[![build status](https://secure.travis-ci.org/seryl/node-jolosrv.png)](http://travis-ci.org/seryl/node-jolosrv)
