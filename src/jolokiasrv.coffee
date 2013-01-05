@@ -73,13 +73,21 @@ class JolokiaSrv
     attrs = @info_client(name)
     query_items = []
     unless attrs == null
-      mbeans = Object.keys(attrs)
-      if mbeans == null or mbeans.length == 0 then return query_items
-      for m in mbeans
-        unless attrs[m] == null or attrs[m].length == 0
-          for attribute in Object.keys(attrs[m])
-            query_items.push({ mbean: m, attribute: attribute })
+      for m in attrs
+        for attr in m.attributes
+          if attr.hasOwnProperty('composites') then c = attr.composites
+          else c = []
+          query_items.push
+            mbean: m.mbean
+            attribute: attr.name
+            composites: c
       return query_items
+
+  ###*
+   *
+  ###
+  lookup_attribute_or_composites: (name) =>
+    attrs = @info_client(name)
 
   ###*
    * Queries jolokia mbeans for a given client and updates their values.
@@ -87,10 +95,15 @@ class JolokiaSrv
    * @param {Function} (fn) The callback function
   ###
   query_jolokia: (name, fn) =>
+    util = require 'util'
+    attrs = @info_client(name)
     query = @generate_client_query(name)
-    if query == [] then return null
+    console.log util.inspect(query, true, 10)
+    # if query == [] then return null
+    query = []
     client = @jclients[name].client
     client.read query, (response) =>
+      # console.log response
       fn(null, response.value)
 
   ###*
@@ -102,6 +115,7 @@ class JolokiaSrv
     for key in Object.keys(@jclients)
       clients[key] = @info_client(key)
     clients
+
 
   ###*
    * Starts up the gmond metric spooler.
