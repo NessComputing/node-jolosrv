@@ -65,23 +65,30 @@ class JolokiaSrv
       null
 
   ###*
-   * Generates a query array for the jolokia client
-   * @param  {String} (name) The name of the client to query
-   * @return {Array}  The list of items to query
+   * Generates a query information for the JMX update
   ###
-  generate_client_query: (name) =>
-    attrs = @info_client(name)
+  generate_query_info: (attributes) =>
     query_items = []
-    unless attrs == null
-      for m in attrs
+    unless attributes == null
+      for m in attributes
         for attr in m.attributes
+          if attr.hasOwnProperty('graph') then g = attr.graph else g = {}
           if attr.hasOwnProperty('composites') then c = attr.composites
           else c = []
           query_items.push
             mbean: m.mbean
             attribute: attr.name
+            graph: g
             composites: c
       return query_items
+
+  ###*
+   * Generates a query array for the jolokia client
+   * @param  {String} (name) The name of the client to query
+   * @return {Array}  The list of items to query
+  ###
+  generate_client_query: (query_info) =>
+    
 
   ###*
    *
@@ -97,12 +104,14 @@ class JolokiaSrv
   query_jolokia: (name, fn) =>
     util = require 'util'
     attrs = @info_client(name)
-    query = @generate_client_query(name)
+    query_info = @generate_query_info(attrs)
+    query = @generate_client_query(query_info)
     console.log util.inspect(query, true, 10)
     # if query == [] then return null
     query = []
     client = @jclients[name].client
     client.read query, (response) =>
+      console.log response
       # console.log response
       fn(null, response.value)
 

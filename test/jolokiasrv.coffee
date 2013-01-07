@@ -171,32 +171,10 @@ describe 'JolokiaSrv', ->
         clients[k]['java.lang:somegroup']['someattr']['graph']).length, 0)
     done()
 
-  # it "should be able to generate an intelligent jolokia query", (done) =>
-  #   url_href = 'http://localhost:1234/jolokia/'
-  #   js.add_client 'test', url_href
-  #   , {
-  #     attrs: [
-  #       { mbean: 'java.lang:somegroup',
-  #       attributes: [
-  #       ] },
-  #       { mbean: 'blehk:mylamelookup',
-  #       attributes: [
-  #       ] }
-  #     ]
-  #   }
-
-  #   query = js.generate_client_query('test')
-  #   query.should.have.length 3
-  #   for i in [0..2]
-  #     Object.keys(query[i]).should.include('mbean')
-  #     Object.keys(query[i]).should.include('attribute')
-  #   done()
-
-  it "should be able to query a basic jolokia mbean", (done) =>
-    post_data = () =>
-      url_href = 'http://localhost:47432/jolokia/'
-      js.add_client 'test', url_href
-      , [
+  it "should be able to generate an intelligent jolokia query", (done) =>
+    url_href = 'http://localhost:1234/jolokia/'
+    js.add_client 'test', url_href
+    , [
         { mbean: 'java.lang:name=ConcurrentMarkSweep,type=GarbageCollector',
         attributes: [
           { name: 'CollectionCount'
@@ -205,29 +183,77 @@ describe 'JolokiaSrv', ->
             description: "GC Collection Count"
             units: "gc count"
             type: "int32" }
+        ] },
+        { mbean: 'java.lang:type=Memory',
+        attributes: [
+          { name: 'HeapMemoryUsage'
+          composites: [
+            { name: 'init',
+            graph:
+              name: "Heap_init"
+              description: "Initial Heap Memory Usage"
+              units: "bytes"
+              type: "int32" }
+          ] }
         ] }
       ]
 
-      js.query_jolokia 'test', (err, resp) =>
-        resp.should.equal 46060
-        srv.close()
-        done()
+    attributes = js.info_client('test')
+    query_info = js.generate_query_info(attributes)
+    query_info.should.have.length 2
+    for q in query_info
+      Object.keys(q).should.include('mbean')
+      Object.keys(q).should.include('attribute')
+      if q.composites.length > 0
+        q.mbean.should.equal 'java.lang:type=Memory'
+        q.attribute.should.equal 'HeapMemoryUsage'
+        q.composites[0].name.should.equal 'init'
+        q.composites[0].graph.name.should.equal 'Heap_init'
+        q.composites[0].graph.type.should.equal 'int32'
+      else
+        q.mbean.should.equal \
+          'java.lang:name=ConcurrentMarkSweep,type=GarbageCollector'
+        q.attribute.should.equal 'CollectionCount'
+        q.graph.name.should.equal 'GC_Collection_Count'
+        q.graph.type.should.equal 'int32'
+    done()
 
-    app = express()
-    app.use express.bodyParser()
-    app.post '/jolokia', (req, res, next) =>
-      return_package = 
-        value: 46060
-        request:
-          type: 'read'
-          mbean: 'java.lang:name=ConcurrentMarkSweep,type=GarbageCollector'
-          attribute: 'CollectionTime'
-        timestamp: 1356650995
-        status: 200
-      res.json 200, return_package
+  # it "should be able to query a basic jolokia mbean", (done) =>
+  #   post_data = () =>
+  #     url_href = 'http://localhost:47432/jolokia/'
+  #     js.add_client 'test', url_href
+  #     , [
+  #       { mbean: 'java.lang:name=ConcurrentMarkSweep,type=GarbageCollector',
+  #       attributes: [
+  #         { name: 'CollectionCount'
+  #         graph:
+  #           name: "GC_Collection_Count"
+  #           description: "GC Collection Count"
+  #           units: "gc count"
+  #           type: "int32" }
+  #       ] }
+  #     ]
 
-    srv = http.createServer(app)
-    srv.listen(47432, post_data)
+  #     js.query_jolokia 'test', (err, resp) =>
+  #       resp.should.equal 46060
+  #       srv.close()
+  #       done()
+
+  #   app = express()
+  #   app.use express.bodyParser()
+  #   app.post '/jolokia', (req, res, next) =>
+  #     return_package = 
+  #       value: 46060
+  #       request:
+  #         type: 'read'
+  #         mbean: 'java.lang:name=ConcurrentMarkSweep,type=GarbageCollector'
+  #         attribute: 'CollectionTime'
+  #       timestamp: 1356650995
+  #       status: 200
+  #     res.json 200, return_package
+
+  #   srv = http.createServer(app)
+  #   srv.listen(47432, post_data)
 
   # it "should be able to query a composite jolokia mbean", (done) =>
   #   post_data = () =>
