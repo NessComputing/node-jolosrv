@@ -25,6 +25,7 @@ class JolokiaSrv
     @jclients[name] =
       client: new Jolokia(url)
       attributes: attributes || new Object()
+      cache: new Object()
 
   ###*
    * Removes all jolokia attributes for the given client.
@@ -65,36 +66,60 @@ class JolokiaSrv
       null
 
   ###*
-   * Generates a query information for the JMX update
+   * Generates a query information for the JMX update.
+   * @param  {Object} (attributes) The detailed information for a client
+   * @return {Array}  The list of info objects
   ###
   generate_query_info: (attributes) =>
-    query_items = []
+    query_info = []
     unless attributes == null
       for m in attributes
         for attr in m.attributes
           if attr.hasOwnProperty('graph') then g = attr.graph else g = {}
           if attr.hasOwnProperty('composites') then c = attr.composites
           else c = []
-          query_items.push
+          query_info.push
             mbean: m.mbean
             attribute: attr.name
             graph: g
             composites: c
-      return query_items
+      return query_info
 
   ###*
-   * Generates a query array for the jolokia client
-   * @param  {String} (name) The name of the client to query
+   * Generates a query array for the jolokia client.
+   * @param  {Object} (query_info) The query info for a client
    * @return {Array}  The list of items to query
   ###
   generate_client_query: (query_info) =>
-    
+    query = []
+    for q in query_info
+      query.push({ mbean: q.mbean, attribute: q.attribute })
+    return query
 
   ###*
-   *
+   * Takes the query_info and response objects and gets the proper result set.
+   * @param {String} (name) The name of the client to query
+   * @param {Object} (query_info) The list of info objects for a client
+   * @param {Object} (response) The query response from jolokia
+   * @param {Function} (fn) The callback function
   ###
-  lookup_attribute_or_composites: (name) =>
-    attrs = @info_client(name)
+  lookup_attribute_or_composites: (name, query_info, response, fn) =>
+    util = require 'util'
+    console.log util.inspect(response, true, 10)
+    console.log util.inspect(query_info, true, 10)
+
+    generate_obj = (item, fn) =>
+      # Mapped generated objects to metrics
+      mbean: ''
+      attribute: ''
+      value: ''
+      graph: ''
+
+    async.map response, generate_obj, (err, results) =>
+      console.log err
+      console.log results
+      @jclients[name].cache = results
+      fn(null, results)
 
   ###*
    * Queries jolokia mbeans for a given client and updates their values.
@@ -102,18 +127,13 @@ class JolokiaSrv
    * @param {Function} (fn) The callback function
   ###
   query_jolokia: (name, fn) =>
-    util = require 'util'
     attrs = @info_client(name)
     query_info = @generate_query_info(attrs)
     query = @generate_client_query(query_info)
-    console.log util.inspect(query, true, 10)
-    # if query == [] then return null
-    query = []
+    if query == [] then return null
     client = @jclients[name].client
     client.read query, (response) =>
-      console.log response
-      # console.log response
-      fn(null, response.value)
+      @lookup_attribute_or_composites(name, query_info, response, fn)
 
   ###*
    * Returns detailed information for all clients.
@@ -124,7 +144,6 @@ class JolokiaSrv
     for key in Object.keys(@jclients)
       clients[key] = @info_client(key)
     clients
-
 
   ###*
    * Starts up the gmond metric spooler.
