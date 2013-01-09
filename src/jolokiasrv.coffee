@@ -28,6 +28,53 @@ class JolokiaSrv
       cache: new Object()
 
   ###*
+   * Cleanup attributes for a client before they are cached for fast lookups.
+  ###
+  convert_attribs_to_hash: (attributes, fn) =>
+    util = require 'util'
+
+    async.reduce attributes, new Object()
+    , (mbean_memo, mbean_attr, mbean_cb) =>
+      mbean_memo[mbean_attr.mbean] ||= new Object()
+
+      # Handle Attributes
+      async.reduce mbean_attr.attributes, new Object()
+      , (a_memo, a_attr, a_cb) =>
+        a_memo[a_attr.name] ||= new Object()
+        if a_attr.hasOwnProperty('graph') and
+        Object.keys(a_attr.graph).length > 0
+          a_memo[a_attr.name].graph = a_attr.graph
+
+        if a_attr.hasOwnProperty('value')
+          a_memo[a_attr.name].value = a_attr.value
+
+        # Handle composites
+        if a_attr.hasOwnProperty('composites') and
+        a_attr.composites.length > 0
+          async.forEach a_attr.composites
+          , (cmp_attr, cmp_cb) =>
+            a_memo[a_attr.name][cmp_attr.name] ||= new Object()
+            if cmp_attr.hasOwnProperty('graph') and
+            Object.keys(cmp_attr.graph).length > 0
+              a_memo[a_attr.name][cmp_attr.name].graph = cmp_attr.graph
+
+            if cmp_attr.hasOwnProperty('value')
+              a_memo[a_attr.name][cmp_attr.name].value = cmp_attr.value
+            cmp_cb(null)
+          , (cmp_err) =>
+            a_cb(null, a_memo)
+        else
+          a_cb(null, a_memo)
+
+      , (a_err, a_results) =>
+        mbean_cb(a_err, mbean_memo)
+
+    , (err, results) =>
+      console.log ''
+      console.log util.inspect(results, true, 10)
+      fn(err, results)
+
+  ###*
    * Removes all jolokia attributes for the given client.
    * @param {String} (name) The name of the client to remove attributes of
   ###
