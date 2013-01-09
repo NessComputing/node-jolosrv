@@ -29,16 +29,16 @@ class JolokiaSrv
 
   ###*
    * Cleanup attributes for a client before they are cached for fast lookups.
+   * @param {Object} (attributes) The attributes for a given client
+   * @param {Function} (fn) The callback function
   ###
   convert_attribs_to_hash: (attributes, fn) =>
-    util = require 'util'
-
     async.reduce attributes, new Object()
     , (mbean_memo, mbean_attr, mbean_cb) =>
       mbean_memo[mbean_attr.mbean] ||= new Object()
 
       # Handle Attributes
-      async.reduce mbean_attr.attributes, new Object()
+      async.reduce mbean_attr.attributes, mbean_memo[mbean_attr.mbean]
       , (a_memo, a_attr, a_cb) =>
         a_memo[a_attr.name] ||= new Object()
         if a_attr.hasOwnProperty('graph') and
@@ -70,8 +70,6 @@ class JolokiaSrv
         mbean_cb(a_err, mbean_memo)
 
     , (err, results) =>
-      console.log ''
-      console.log util.inspect(results, true, 10)
       fn(err, results)
 
   ###*

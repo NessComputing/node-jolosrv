@@ -244,6 +244,23 @@ describe 'JolokiaSrv', ->
     ]
 
     js.convert_attribs_to_hash js.info_client('test'), (err, result) =>
+      r = result['java.lang:name=ConcurrentMarkSweep,type=GarbageCollector']
+      Object.keys(r).should.have.length 2
+      for item in Object.keys(r)
+        if item == 'CollectionCount'
+          Object.keys(r[item]).should.have.length 1
+          Object.keys(r[item]).should.include 'graph'
+          Object.keys(r[item].graph).should.have.length 4
+        else if item == 'LastGcInfo'
+          Object.keys(r[item]).should.have.length 1
+          Object.keys(r[item]).should
+          .include 'memoryUsageBeforeGC|Code Cache|init'
+          Object.keys(r[item]['memoryUsageBeforeGC|Code Cache|init']).should
+          .include 'graph'
+          Object.keys(r[item]['memoryUsageBeforeGC|Code Cache|init'].graph)
+          .should.have.length 4
+        else
+          throw new Error("Should never get here")
       done()
 
   # it "should be able to query a basic jolokia mbean", (done) =>
