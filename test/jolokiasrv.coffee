@@ -218,7 +218,7 @@ describe 'JolokiaSrv', ->
         q.graph.type.should.equal 'int32'
     done()
 
-  it "should be able to hashify a metrics request", (done) =>
+  it "should be able to convert attributes to a hash", (done) =>
     url_href = 'http://localhost:47432/jolokia/'
     js.add_client 'test', url_href
     , [
@@ -263,43 +263,44 @@ describe 'JolokiaSrv', ->
           throw new Error("Should never get here")
       done()
 
-  # it "should be able to query a basic jolokia mbean", (done) =>
-  #   post_data = () =>
-  #     url_href = 'http://localhost:47432/jolokia/'
-  #     js.add_client 'test', url_href
-  #     , [
-  #       { mbean: 'java.lang:name=ConcurrentMarkSweep,type=GarbageCollector',
-  #       attributes: [
-  #         { name: 'CollectionCount'
-  #         graph:
-  #           name: "GC_Collection_Count"
-  #           description: "GC Collection Count"
-  #           units: "gc count"
-  #           type: "int32" }
-  #       ] }
-  #     ]
+  it "should be able to query a basic jolokia mbean", (done) =>
+    post_data = () =>
+      url_href = 'http://localhost:47432/jolokia/'
+      js.add_client 'test', url_href
+      , [
+        { mbean: 'java.lang:name=ConcurrentMarkSweep,type=GarbageCollector',
+        attributes: [
+          { name: 'CollectionCount'
+          graph:
+            name: "GC_Collection_Count"
+            description: "GC Collection Count"
+            units: "gc count"
+            type: "int32" }
+        ] }
+      ]
 
-  #     js.query_jolokia 'test', (err, resp) =>
-  #       resp.should.equal 46060
-  #       srv.close()
-  #       done()
+      js.query_jolokia 'test', (err, resp) =>
+        # console.log resp
+        # resp.should.equal 46060
+        srv.close()
+        done()
 
-  #   app = express()
-  #   app.use express.bodyParser()
-  #   app.post '/jolokia', (req, res, next) =>
-  #     return_package = [
-  #       { value: 46060
-  #       request:
-  #         type: 'read'
-  #         mbean: 'java.lang:name=ConcurrentMarkSweep,type=GarbageCollector'
-  #         attribute: 'CollectionTime'
-  #       timestamp: 1356650995
-  #       status: 200 }
-  #     ]
-  #     res.json 200, return_package
+    app = express()
+    app.use express.bodyParser()
+    app.post '/jolokia', (req, res, next) =>
+      return_package = [
+        { value: 46060
+        request:
+          type: 'read'
+          mbean: 'java.lang:name=ConcurrentMarkSweep,type=GarbageCollector'
+          attribute: 'CollectionCount'
+        timestamp: 1356650995
+        status: 200 }
+      ]
+      res.json 200, return_package
 
-  #   srv = http.createServer(app)
-  #   srv.listen(47432, post_data)
+    srv = http.createServer(app)
+    srv.listen(47432, post_data)
 
   # it "should be able to query a composite jolokia mbean", (done) =>
   #   post_data = () =>

@@ -29,7 +29,7 @@ class JolokiaSrv
 
   ###*
    * Cleanup attributes for a client before they are cached for fast lookups.
-   * @param {Object} (attributes) The attributes for a given client
+   * @param {Object} (attributes) The metrics attributes for a given client
    * @param {Function} (fn) The callback function
   ###
   convert_attribs_to_hash: (attributes, fn) =>
@@ -144,27 +144,36 @@ class JolokiaSrv
   ###*
    * Takes the query_info and response objects and gets the proper result set.
    * @param {String} (name) The name of the client to query
-   * @param {Object} (query_info) The list of info objects for a client
+   * @param {Object} (attrs) The metrics attributes for a client
    * @param {Object} (response) The query response from jolokia
    * @param {Function} (fn) The callback function
   ###
-  lookup_attribute_or_composites: (name, query_info, response, fn) =>
+  lookup_attribute_or_composites: (name, attrs, response, fn) =>
+
+    # TODO: Combine responses with their proper attributes and cache results
     util = require 'util'
+    console.log ''
     console.log util.inspect(response, true, 10)
-    console.log util.inspect(query_info, true, 10)
+    console.log ''
+    # console.log util.inspect(query_info, true, 10)
+    # console.log name
 
-    generate_obj = (item, fn) =>
-      # Mapped generated objects to metrics
-      mbean: ''
-      attribute: ''
-      value: ''
-      graph: ''
+    @convert_attribs_to_hash attrs, (err, result) =>
+      console.log util.inspect(result, true, 10)
+      fn(null, null)
 
-    async.map response, generate_obj, (err, results) =>
-      console.log err
-      console.log results
-      @jclients[name].cache = results
-      fn(null, results)
+    # generate_obj = (item, fn) =>
+    #   # Mapped generated objects to metrics
+    #   mbean: ''
+    #   attribute: ''
+    #   value: ''
+    #   graph: ''
+
+    # async.map response, generate_obj, (err, results) =>
+    #   console.log err
+    #   console.log results
+    #   @jclients[name].cache = results
+    #   fn(null, results)
 
   ###*
    * Queries jolokia mbeans for a given client and updates their values.
@@ -178,7 +187,7 @@ class JolokiaSrv
     if query == [] then return null
     client = @jclients[name].client
     client.read query, (response) =>
-      @lookup_attribute_or_composites(name, query_info, response, fn)
+      @lookup_attribute_or_composites(name, attrs, response, fn)
 
   ###*
    * Returns detailed information for all clients.
