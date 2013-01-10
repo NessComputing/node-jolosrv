@@ -149,31 +149,30 @@ class JolokiaSrv
    * @param {Function} (fn) The callback function
   ###
   lookup_attribute_or_composites: (name, attrs, response, fn) =>
-
     # TODO: Combine responses with their proper attributes and cache results
     util = require 'util'
     console.log ''
-    console.log util.inspect(response, true, 10)
-    console.log ''
-    # console.log util.inspect(query_info, true, 10)
-    # console.log name
 
-    @convert_attribs_to_hash attrs, (err, result) =>
-      console.log util.inspect(result, true, 10)
-      fn(null, null)
+    @convert_attribs_to_hash attrs, (h_err, hattribs) =>
+      handle_response_obj = (item, cb) =>
+        mbean = item.request.mbean
+        attribute = item.request.attribute
+        value = item.value
 
-    # generate_obj = (item, fn) =>
-    #   # Mapped generated objects to metrics
-    #   mbean: ''
-    #   attribute: ''
-    #   value: ''
-    #   graph: ''
+        # Add the top-level value if it is a simple k/v
+        if hattribs[mbean][attribute].hasOwnProperty('graph') and
+        Object.keys(hattribs[mbean][attribute].graph).length > 0
+          hattribs[mbean][attribute].value = value
 
-    # async.map response, generate_obj, (err, results) =>
-    #   console.log err
-    #   console.log results
-    #   @jclients[name].cache = results
-    #   fn(null, results)
+        # For each key that isn't graph or value, get their values
+        keys = (k for k in Object.keys(hattribs[mbean][attribute]) when \
+        k != 'graph' and k!= 'value')
+        console.log keys
+        cb(null)
+
+      async.forEach response, handle_response_obj, (err) =>
+        console.log util.inspect(hattribs, true, 10)
+        fn(null, null)
 
   ###*
    * Queries jolokia mbeans for a given client and updates their values.
