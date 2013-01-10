@@ -280,8 +280,11 @@ describe 'JolokiaSrv', ->
       ]
 
       js.query_jolokia 'test', (err, resp) =>
-        # console.log resp
-        # resp.should.equal 46060
+        Object.keys(resp).should
+        .include 'java.lang:name=ConcurrentMarkSweep,type=GarbageCollector'
+        k = resp['java.lang:name=ConcurrentMarkSweep,type=GarbageCollector']
+        Object.keys(k).should.include 'CollectionCount'
+        k['CollectionCount'].value.should.equal 46060
         srv.close()
         done()
 

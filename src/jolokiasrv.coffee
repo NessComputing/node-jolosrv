@@ -149,10 +149,6 @@ class JolokiaSrv
    * @param {Function} (fn) The callback function
   ###
   lookup_attribute_or_composites: (name, attrs, response, fn) =>
-    # TODO: Combine responses with their proper attributes and cache results
-    util = require 'util'
-    console.log ''
-
     @convert_attribs_to_hash attrs, (h_err, hattribs) =>
       handle_response_obj = (item, cb) =>
         mbean = item.request.mbean
@@ -167,12 +163,11 @@ class JolokiaSrv
         # For each key that isn't graph or value, get their values
         keys = (k for k in Object.keys(hattribs[mbean][attribute]) when \
         k != 'graph' and k!= 'value')
-        console.log keys
         cb(null)
 
       async.forEach response, handle_response_obj, (err) =>
-        console.log util.inspect(hattribs, true, 10)
-        fn(null, null)
+        @jclients[name].cache = hattribs
+        fn(null, hattribs)
 
   ###*
    * Queries jolokia mbeans for a given client and updates their values.
