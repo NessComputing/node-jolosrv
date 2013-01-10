@@ -155,6 +155,18 @@ class JolokiaSrv
         attribute = item.request.attribute
         value = item.value
 
+        retrieve_composite_value = (input) =>
+          if typeof input == 'string'
+            input = input.split('|')
+          return recursive_get_val(value, input)
+
+        recursive_get_val = (walk, list) =>
+          if list.length > 1
+            next = list.shift()
+            return recursive_get_val(walk[next], list)
+          else
+            return walk[list]
+
         # Add the top-level value if it is a simple k/v
         if hattribs[mbean][attribute].hasOwnProperty('graph') and
         Object.keys(hattribs[mbean][attribute].graph).length > 0
@@ -163,6 +175,8 @@ class JolokiaSrv
         # For each key that isn't graph or value, get their values
         keys = (k for k in Object.keys(hattribs[mbean][attribute]) when \
         k != 'graph' and k!= 'value')
+        for k in keys
+          hattribs[mbean][attribute][k].value = retrieve_composite_value(k)
         cb(null)
 
       async.forEach response, handle_response_obj, (err) =>

@@ -305,50 +305,55 @@ describe 'JolokiaSrv', ->
     srv = http.createServer(app)
     srv.listen(47432, post_data)
 
-  # it "should be able to query a composite jolokia mbean", (done) =>
-  #   post_data = () =>
-  #     url_href = 'http://localhost:47432/jolokia/'
-  #     js.add_client 'test', url_href
-  #     , [
-  #       { mbean: 'java.lang:type=Memory',
-  #       attributes: [
-  #         { name: 'HeapMemoryUsage'
-  #         composites: [
-  #           { name: 'init',
-  #           graph:
-  #             name: "Heap_init"
-  #             description: "Initial Heap Memory Usage"
-  #             units: "bytes"
-  #             type: "int32" }
-  #         ] }
-  #       ] }
-  #     ]
+  it "should be able to query a composite jolokia mbean", (done) =>
+    post_data = () =>
+      url_href = 'http://localhost:47432/jolokia/'
+      js.add_client 'test', url_href
+      , [
+        { mbean: 'java.lang:type=Memory',
+        attributes: [
+          { name: 'HeapMemoryUsage'
+          composites: [
+            { name: 'init',
+            graph:
+              name: "Heap_init"
+              description: "Initial Heap Memory Usage"
+              units: "bytes"
+              type: "int32" }
+          ] }
+        ] }
+      ]
       
-  #     js.query_jolokia 'test', (err, resp) =>
-  #       console.log resp
-  #       # resp.memoryUsageAfterGc['Code Cache'].init.should.equal 2555904
-  #       srv.close()
-  #       done()
+      js.query_jolokia 'test', (err, resp) =>
+        Object.keys(resp).should.include 'java.lang:type=Memory'
+        k = resp['java.lang:type=Memory']
+        Object.keys(k).should.include 'HeapMemoryUsage'
+        Object.keys(k['HeapMemoryUsage']).should.include 'init'
+        k['HeapMemoryUsage']['init'].value.should.equal 393561088
+        Object.keys(k['HeapMemoryUsage']['init'].graph).should.have.length 4
+        srv.close()
+        done()
 
-  #   app = express()
-  #   app.use express.bodyParser()
-  #   app.post '/jolokia', (req, res, next) =>
-  #     return_package = 
-  #       status: 200
-  #       timestamp: 1357339120
-  #       request:
-  #         attribute: 'HeapMemoryUsage'
-  #         type: 'read'
-  #         mbean: 'java.lang:type=Memory'
-  #       value:
-  #         used: 257367360
-  #         init: 393561088
-  #         max: 2602041344
-  #         committed: 2602041344
-  #     res.json 200, return_package
+    app = express()
+    app.use express.bodyParser()
+    app.post '/jolokia', (req, res, next) =>
+      return_package = [
+        { status: 200
+        timestamp: 1357339120
+        request:
+          attribute: 'HeapMemoryUsage'
+          type: 'read'
+          mbean: 'java.lang:type=Memory'
+        value:
+          used: 257367360
+          init: 393561088
+          max: 2602041344
+          committed: 2602041344 }
+      ]
+      res.json 200, return_package
 
-  #   srv = http.createServer(app)
-  #   srv.listen(47432, post_data)
+    srv = http.createServer(app)
+    srv.listen(47432, post_data)
 
   # it "should be able to query a multilevel composite jolokia mbean", (done) =>
   #   post_data = () =>
