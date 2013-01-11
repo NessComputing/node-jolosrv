@@ -8,7 +8,7 @@ Logger = require './logger'
 JolokiaSrv = require './jolokiasrv'
 
 ###*
- * The iOS-ota webserver class.
+ * The webserver class.
 ###
 class WebServer
   constructor: ->
