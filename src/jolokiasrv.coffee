@@ -12,6 +12,7 @@ class JolokiaSrv
     @interval or= 15
     @jclients = new Object()
     @gmond_interval_id = null
+    @gmetric = new Gmetric()
     @config = Config.get()
 
   ###*
@@ -201,7 +202,7 @@ class JolokiaSrv
    * Returns detailed information for all clients.
    * @return {Object} The hash representing the all client info
   ###
-  info_all_clients: () =>
+  info_all_clients: =>
     clients = new Object()
     for key in Object.keys(@jclients)
       clients[key] = @info_client(key)
@@ -220,7 +221,7 @@ class JolokiaSrv
   ###*
    * Stops the gmond metric spooler.
   ###
-  stop_gmond: () =>
+  stop_gmond: =>
     if @gmond_interval_id
       clearInterval(@gmond_interval_id)
       @gmond_interval_id = null
@@ -237,6 +238,23 @@ class JolokiaSrv
    *        group:  'mygraph_group' }
   ###
   submit_metrics: =>
-    clients = @info_all_clients()
+    # TODO: This is incomplete
+    # util = require 'util'
+    clientlist = Object.keys(@jclients)
+    unless clientlist.length > 0 then return
+
+    # recursive_walk
+
+    compile_and_submit_metric = (mattr) =>
+      metric = mattr.graph
+      metric.value = mattr.value
+      metric.hostname = "#{client}:#{client}"
+      @gmetric.send()
+
+    async.forEach clientlist
+    , (client, cb) =>
+      if Object.keys(@jclients[client]) > 0 then cb(null)
+      # else console.log util.inspect(@jclients[client].cache, true, 10)
+    , (err) =>
 
 module.exports = JolokiaSrv
