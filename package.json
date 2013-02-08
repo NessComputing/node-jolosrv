@@ -1,6 +1,6 @@
 {
   "name":"jolosrv",
-  "version":"0.0.1",
+  "version":"0.0.2",
   "description": "A jolokia JMX to ganglia service",
   "author": "Josh Toft <joshtoft@gmail.com>",
   "repository": {
@@ -16,6 +16,7 @@
     "async": "0.1.x",
     "jolokia-client": "0.0.x",
     "gmetric": "0.2.x",
+    "mkdirp": "0.3.4",
     "pkginfo": "0.2.x"
   },
   "devDependencies": {

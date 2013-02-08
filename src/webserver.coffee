@@ -59,11 +59,11 @@ class WebServer
       unless client.url then return res.json 400,
         error: "Adding or updating a client requires a jolokia url."
 
-      cl = @jsrv.add_client(client.name, client.url, client.attributes)
+      cl = @jsrv.add_client(client.name, client.url, client.template)
       res.json 200,
         name: client.name
         url: client.url
-        attributes: cl.attributes
+        template: cl.template
 
     # Get details for a given client.
     @app.get '/clients/:client', (req, res, next) =>
@@ -73,19 +73,14 @@ class WebServer
         return res.json 404, message: "Client does not exist."
       res.json 200, info: data
 
-    # Remove attributes for a client.
-    @app.del '/clients/:client/attributes', (req, res, next) =>
-      client = req.params.client
-      data = @jsrv.info_client(client)
-      if data == null
-        return res.json 404, message: "Client does not exist."
-      @jsrv.remove_attributes(client)
-      data = @jsrv.info_client(client)
-      res.json 200, info: data
-
     # Delete a client.
     @app.del '/clients/:client', (req, res, next) =>
       res.json 200,
         clients: @jsrv.remove_client(req.params.client)
+
+    # Get a list of templates
+    @app.get '/templates', (req, res, next) =>
+      res.json 200,
+        templates: @jsrv.list_templates()
 
 module.exports = WebServer

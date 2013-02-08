@@ -1,19 +1,92 @@
+os = require 'os'
+fs = require 'fs'
 Jolokia = require 'jolokia-client'
 async = require 'async'
+mkdirp = require 'mkdirp'
 Gmetric = require 'gmetric'
 
 Config = require './config'
+Logger = require './logger'
 
 ###*
  * Jolokia server client wrapper.
 ###
 class JolokiaSrv
   constructor: (@interval) ->
-    @interval or= 15
-    @jclients = new Object()
+    @interval or= 20
+    @jclients  = new Object()
+    @templates = new Object()
+
     @gmond_interval_id = null
     @gmetric = new Gmetric()
     @config = Config.get()
+    @logger = Logger.get()
+
+    @setup_template_dir()
+
+  ###*
+   * Sets up the template directory and loads the current templates
+  ###
+  setup_template_dir: =>
+    mkdirp @config.get('template_dir'), (err) =>
+      if (err)
+        @logger.error "Error creating template directory: #{err}"
+        process.exit(1)
+      else
+        @watch_templates()
+
+  ###*
+   * Watch template directory and update @templates on changes.
+   * @note watching with inotify is current only supported on linux,
+   * other operating systems will drop to an initial-load only.
+  ###
+  watch_templates: =>
+    @load_all_templates()
+    if os.platform() == 'linux'
+      fs.watch @config.get('template_dir')
+      , (event, filename) =>
+        fs.exists path.resolve(@config.get('template_dir'), filename)
+        , (exists) =>
+          if exists
+            @load_template(filename)
+          else
+            @unload_template(filename)
+
+  ###*
+   * Loads all of the current templates in the template directory.
+   * @param {Function} (fn) The callback function
+  ###
+  load_all_templates: (fn) =>
+    @stop_gmond
+    fs.readdir path.resolve(@config.get('template_dir')), (err, files) =>
+      json_files = files.filter (x) -> x.match /\.json/
+      async.forEach json_files, @load_template, (err) =>
+        @start_gmond
+        if fn then fn(err)
+
+  ###*
+   * Removes the given template from the available templates.
+   * @param {String}   (template) The template to remove
+  ###
+  load_template: (template, fn) =>
+    fs.readFile path.resolve(@config.get('template_dir'), template)
+      , 'utf8', (err, data) =>
+        if (err)
+          @logger.error "Error reading file: #{template}"
+        else
+          try
+            json_data = JSON.parse(data)
+            @templates[json_data.name] = { mappings: json_data.mappings }
+          catch error
+            @logger.error "Error parsing `#{template}`: #{error}"
+        fn(err)
+
+  ###*
+   * Removes the given template from the available templates.
+   * @param {String} (template) The template to remove
+  ###
+  unload_template: (template) =>
+    delete @templates[template]
 
   ###*
    * Add a new jolokia lookup client into the hash.
@@ -22,10 +95,12 @@ class JolokiaSrv
    * @param  {Object}  (attributes) The attributes to lookup for the client
    * @return {Object}  The jolokia client that was added
   ###
-  add_client: (name, url, attributes) =>
+  add_client: (name, url, template) =>
     @jclients[name] =
       client: new Jolokia(url)
-      attributes: attributes || new Object()
+      name: name
+      url: url
+      template: template
       cache: new Object()
 
   ###*
@@ -72,16 +147,6 @@ class JolokiaSrv
 
     , (err, results) =>
       fn(err, results)
-
-  ###*
-   * Removes all jolokia attributes for the given client.
-   * @param {String} (name) The name of the client to remove attributes of
-  ###
-  remove_attributes: (name) =>
-    return unless @jclients[name]
-    return unless Object.keys(@jclients[name]['attributes']).length > 0
-    for key in Object.keys(@jclients[name]['attributes'])
-      delete @jclients[name]['attributes'][key]
 
   ###*
    * List the current jolokia clients.

@@ -1,0 +1,19 @@
+{
+  "name": "concurrentms_collector",
+  "mappings": [
+    {
+      "mbean": "java.lang:name=ConcurrentMarkSweep,type=GarbageCollector",
+      "attributes": [
+        {
+          "name": "CollectionTime",
+          "graph": {
+            "units": "gc/sec",
+            "slope": "both",
+            "tmax": 60,
+            "dmax": 180
+          }
+        }
+      ]
+    }
+  ]
+}

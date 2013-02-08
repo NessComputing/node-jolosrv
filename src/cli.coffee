@@ -19,6 +19,16 @@ class CLI
       .describe('c', 'The configuration file to use')
       .default('c', "/etc/jolosrv.json")
 
+      # template directory
+      .alias('t', 'template_dir')
+      .describe('t', 'The template directory to watch')
+      .default('t', '/opt/jolosrv/templates')
+
+      # cluster prefix
+      .alias('C', 'cluster_prefix')
+      .describe('C', 'The gmond cluster prefix')
+      .default('C', null)
+
       # ganglia gmetric gmond host
       .alias('g', 'gmetric')
       .describe('g', 'The gmond host to send gmetric data to')
