@@ -289,13 +289,14 @@ class JolokiaSrv
    * @param {Function} (fn) The callback function
   ###
   query_jolokia: (name, fn) =>
-    client = @info_client(name)
-    query_info = @generate_query_info(client)
+    util = require 'util'
+    cinfo = @info_client(name)
+    query_info = @generate_query_info(cinfo)
     query = @generate_client_query(query_info)
     if query == [] then return null
     client = @jclients[name].client
     client.read query, (response) =>
-      @lookup_attribute_or_composites(name, attrs, response, fn)
+      @lookup_attribute_or_composites(name, cinfo.mappings, response, fn)
 
   ###*
    * Returns detailed information for all clients.

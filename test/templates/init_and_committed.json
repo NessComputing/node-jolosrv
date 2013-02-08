@@ -1,0 +1,37 @@
+{
+  "name": "init_and_committed",
+  "mappings": [
+  
+    {
+      "mbean": "java.lang:name=ParNew,type=GarbageCollector",
+      "attributes": [
+        {
+          "name": "LastGcInfo",
+          "composites": [
+            {
+              "name": "memoryUsageBeforeGC|Code Cache|init",
+              "graph": {
+                "name": "Memory_Usage_Before_GC_Code_Cache_Init",
+                "description": "Code Cache (Init) Memory Usage Before GC",
+                "units": "bytes",
+                "type": "int32",
+                "slope": "both"
+              }
+            },
+            {
+              "name": "memoryUsageBeforeGC|Code Cache|committed",
+              "graph": {
+                "name": "Memory_Usage_Before_GC_Code_Cache_Committed",
+                "description": "Code Cache (Committed) Memory Usage Before GC",
+                "units": "bytes",
+                "type": "int32",
+                "slope": "both"
+              }
+            }
+          ]
+        }
+      ]
+    }
+
+  ]
+}

@@ -170,211 +170,169 @@ describe 'JolokiaSrv', ->
       done()
 
   # it "should be able to query a basic jolokia mbean", (done) =>
-  #   post_data = () =>
-  #     url_href = 'http://localhost:47432/jolokia/'
-  #     js.add_client 'test', url_href
-  #     , [
-  #       { mbean: 'java.lang:name=ConcurrentMarkSweep,type=GarbageCollector',
-  #       attributes: [
-  #         { name: 'CollectionCount'
-  #         graph:
-  #           name: "GC_Collection_Count"
-  #           description: "GC Collection Count"
-  #           units: "gc count"
-  #           type: "int32" }
-  #       ] }
-  #     ]
+  #   js.load_all_templates () =>
+  #     post_data = () =>
+  #       url_href = 'http://localhost:47432/jolokia/'
+  #       js.add_client 'test', url_href, 'concurrentms_collector'
 
-  #     js.query_jolokia 'test', (err, resp) =>
-  #       Object.keys(resp).should
-  #       .include 'java.lang:name=ConcurrentMarkSweep,type=GarbageCollector'
-  #       k = resp['java.lang:name=ConcurrentMarkSweep,type=GarbageCollector']
-  #       Object.keys(k).should.include 'CollectionCount'
-  #       k['CollectionCount'].value.should.equal 46060
-  #       Object.keys(k['CollectionCount'].graph).should.have.length 4
-  #       srv.close()
-  #       done()
+  #       js.query_jolokia 'test', (err, resp) =>
+  #         Object.keys(resp).should
+  #         .include 'java.lang:name=ConcurrentMarkSweep,type=GarbageCollector'
+  #         k = resp['java.lang:name=ConcurrentMarkSweep,type=GarbageCollector']
+  #         Object.keys(k).should.include 'CollectionTime'
+  #         k['CollectionTime'].value.should.equal 46060
+  #         Object.keys(k['CollectionTime'].graph).should.have.length 5
+  #         srv.close()
+  #         done()
 
-  #   app = express()
-  #   app.use express.bodyParser()
-  #   app.post '/jolokia', (req, res, next) =>
-  #     return_package = [
-  #       { value: 46060
-  #       request:
-  #         type: 'read'
-  #         mbean: 'java.lang:name=ConcurrentMarkSweep,type=GarbageCollector'
-  #         attribute: 'CollectionCount'
-  #       timestamp: 1356650995
-  #       status: 200 }
-  #     ]
-  #     res.json 200, return_package
+  #     app = express()
+  #     app.use express.bodyParser()
+  #     app.post '/jolokia', (req, res, next) =>
+  #       return_package = [
+  #         { value: 46060
+  #         request:
+  #           type: 'read'
+  #           mbean: 'java.lang:name=ConcurrentMarkSweep,type=GarbageCollector'
+  #           attribute: 'CollectionTime'
+  #         timestamp: 1356650995
+  #         status: 200 }
+  #       ]
+  #       res.json 200, return_package
 
-  #   srv = http.createServer(app)
-  #   srv.listen(47432, post_data)
+  #     srv = http.createServer(app)
+  #     srv.listen(47432, post_data)
 
   # it "should be able to query a composite jolokia mbean", (done) =>
-  #   post_data = () =>
-  #     url_href = 'http://localhost:47432/jolokia/'
-  #     js.add_client 'test', url_href
-  #     , [
-  #       { mbean: 'java.lang:type=Memory',
-  #       attributes: [
-  #         { name: 'HeapMemoryUsage'
-  #         composites: [
-  #           { name: 'init',
-  #           graph:
-  #             name: "Heap_init"
-  #             description: "Initial Heap Memory Usage"
-  #             units: "bytes"
-  #             type: "int32" }
-  #         ] }
-  #       ] }
-  #     ]
-      
-  #     js.query_jolokia 'test', (err, resp) =>
-  #       Object.keys(resp).should.include 'java.lang:type=Memory'
-  #       k = resp['java.lang:type=Memory']
-  #       Object.keys(k).should.include 'HeapMemoryUsage'
-  #       Object.keys(k['HeapMemoryUsage']).should.include 'init'
-  #       k['HeapMemoryUsage']['init'].value.should.equal 393561088
-  #       Object.keys(k['HeapMemoryUsage']['init'].graph).should.have.length 4
-  #       srv.close()
-  #       done()
+  #   js.load_all_templates () =>
+  #     post_data = () =>
+  #       url_href = 'http://localhost:47432/jolokia/'
+  #       js.add_client 'test', url_href, 'memory_composite'
+        
+  #       js.query_jolokia 'test', (err, resp) =>
+  #         Object.keys(resp).should.include 'java.lang:type=Memory'
+  #         k = resp['java.lang:type=Memory']
+  #         Object.keys(k).should.include 'HeapMemoryUsage'
+  #         Object.keys(k['HeapMemoryUsage']).should.include 'init'
+  #         k['HeapMemoryUsage']['init'].value.should.equal 393561088
+  #         Object.keys(k['HeapMemoryUsage']['init'].graph).should.have.length 4
+  #         srv.close()
+  #         done()
 
-  #   app = express()
-  #   app.use express.bodyParser()
-  #   app.post '/jolokia', (req, res, next) =>
-  #     return_package = [
-  #       { status: 200
-  #       timestamp: 1357339120
-  #       request:
-  #         attribute: 'HeapMemoryUsage'
-  #         type: 'read'
-  #         mbean: 'java.lang:type=Memory'
-  #       value:
-  #         used: 257367360
-  #         init: 393561088
-  #         max: 2602041344
-  #         committed: 2602041344 }
-  #     ]
-  #     res.json 200, return_package
+  #     app = express()
+  #     app.use express.bodyParser()
+  #     app.post '/jolokia', (req, res, next) =>
+  #       return_package = [
+  #         { status: 200
+  #         timestamp: 1357339120
+  #         request:
+  #           attribute: 'HeapMemoryUsage'
+  #           type: 'read'
+  #           mbean: 'java.lang:type=Memory'
+  #         value:
+  #           used: 257367360
+  #           init: 393561088
+  #           max: 2602041344
+  #           committed: 2602041344 }
+  #       ]
+  #       res.json 200, return_package
 
-  #   srv = http.createServer(app)
-  #   srv.listen(47432, post_data)
+  #     srv = http.createServer(app)
+  #     srv.listen(47432, post_data)
 
-  # it "should be able to query a multilevel composite jolokia mbean", (done) =>
-  #   post_data = () =>
-  #     url_href = 'http://localhost:47432/jolokia/'
-  #     js.add_client 'test', url_href
-  #     , [
-  #       { mbean: 'java.lang:name=ParNew,type=GarbageCollector',
-  #       attributes: [
-  #         { name: 'LastGcInfo'
-  #         composites: [
-  #           { name: 'memoryUsageBeforeGc|Code Cache|init',
-  #           graph:
-  #             name: "MemoryUsage_Before_GC_Code_Cache_Init"
-  #             description: "Code Cache (Init) Memory Usage Before GC"
-  #             units: "bytes"
-  #             type: "int32" },
-  #           { name: 'memoryUsageBeforeGc|Code Cache|committed',
-  #           graph:
-  #             name: "MemoryUsage_Before_GC_Code_Cache_Committed"
-  #             description: "Code Cache (Committed) Memory Usage Before GC"
-  #             units: "bytes"
-  #             type: "int32" }
-  #         ] }
-  #       ] }
-  #     ]
+  it "should be able to query a multilevel composite jolokia mbean", (done) =>
+    js.load_all_templates () =>
+      post_data = () =>
+        url_href = 'http://localhost:47432/jolokia/'
+        js.add_client 'test', url_href, 'init_and_committed'
 
-  #     js.query_jolokia 'test', (err, resp) =>
-  #       Object.keys(resp).should
-  #       .include 'java.lang:name=ParNew,type=GarbageCollector'
-  #       k = resp['java.lang:name=ParNew,type=GarbageCollector']
-  #       Object.keys(k).should.include 'LastGcInfo'
-  #       Object.keys(k['LastGcInfo']).should
-  #       .include 'memoryUsageBeforeGc|Code Cache|init'
-  #       k2 = k['LastGcInfo']['memoryUsageBeforeGc|Code Cache|init']
-  #       k2.value.should.equal 2555904
-  #       k3 = k['LastGcInfo']['memoryUsageBeforeGc|Code Cache|committed']
-  #       k3.value.should.equal 9764864
-  #       Object.keys(k2.graph).should.have.length 4
-  #       srv.close()
-  #       done()
+        js.query_jolokia 'test', (err, resp) =>
+          Object.keys(resp).should
+          .include 'java.lang:name=ParNew,type=GarbageCollector'
+          k = resp['java.lang:name=ParNew,type=GarbageCollector']
+          Object.keys(k).should.include 'LastGcInfo'
+          Object.keys(k['LastGcInfo']).should
+          .include 'memoryUsageBeforeGC|Code Cache|init'
+          k2 = k['LastGcInfo']['memoryUsageBeforeGC|Code Cache|init']
+          k2.value.should.equal 2555904
+          k3 = k['LastGcInfo']['memoryUsageBeforeGC|Code Cache|committed']
+          k3.value.should.equal 9764864
+          Object.keys(k2.graph).should.have.length 5
+          srv.close()
+          done()
 
-  #   app = express()
-  #   app.use express.bodyParser()
-  #   app.post '/jolokia', (req, res, next) =>
-  #     return_package = [
-  #       { status: 200
-  #       timestamp: 1356657870
-  #       duration: 10
-  #       request:
-  #         attribute: 'LastGcInfo'
-  #         type: 'read'
-  #         mbean: 'java.lang:name=ParNew,type=GarbageCollector'
-  #       value:
-  #         id: 118583
-  #         memoryUsageBeforeGc: 
-  #           'Code Cache': 
-  #             init: 2555904
-  #             committed: 9764864
-  #             used: 9589824
-  #             max: 50331648
-  #           'CMS Perm Gen': 
-  #             init: 21757952
-  #             committed: 75091968
-  #             used: 44995904
-  #             max: 268435456
-  #           'CMS Old Gen': 
-  #             init: 262406144
-  #             committed: 1973878784
-  #             used: 1257080824
-  #             max: 1973878784
-  #           'Par Eden Space': 
-  #             init: 104988672
-  #             committed: 558432256
-  #             used: 558432256
-  #             max: 558432256
-  #           'Par Survivor Space': 
-  #             init: 13107200
-  #             committed: 69730304
-  #             used: 6333344
-  #             max: 69730304
-  #         GcThreadCount: 11,
-  #         endTime: 521639692
-  #         startTime: 521639682
-  #         memoryUsageAfterGc: 
-  #           'Code Cache': 
-  #             init: 2555904
-  #             committed: 9764864
-  #             used: 9589824
-  #             max: 50331648
-  #           'CMS Perm Gen': 
-  #             init: 21757952
-  #             committed: 75091968
-  #             used: 44995904
-  #             max: 268435456
-  #           'CMS Old Gen': 
-  #             init: 262406144
-  #             committed: 1973878784
-  #             used: 1257559928
-  #             max: 1973878784
-  #           'Par Eden Space':
-  #             init: 104988672
-  #             committed: 558432256
-  #             used: 0
-  #             max: 558432256
-  #           'Par Survivor Space': 
-  #             init: 13107200
-  #             committed: 69730304
-  #             used: 8012272
-  #             max: 69730304 }
-  #     ]
-  #     res.json 200, return_package
+      app = express()
+      app.use express.bodyParser()
+      app.post '/jolokia', (req, res, next) =>
+        return_package = [
+          { status: 200
+          timestamp: 1356657870
+          duration: 10
+          request:
+            attribute: 'LastGcInfo'
+            type: 'read'
+            mbean: 'java.lang:name=ParNew,type=GarbageCollector'
+          value:
+            id: 118583
+            memoryUsageBeforeGC: 
+              'Code Cache': 
+                init: 2555904
+                committed: 9764864
+                used: 9589824
+                max: 50331648
+              'CMS Perm Gen': 
+                init: 21757952
+                committed: 75091968
+                used: 44995904
+                max: 268435456
+              'CMS Old Gen': 
+                init: 262406144
+                committed: 1973878784
+                used: 1257080824
+                max: 1973878784
+              'Par Eden Space': 
+                init: 104988672
+                committed: 558432256
+                used: 558432256
+                max: 558432256
+              'Par Survivor Space': 
+                init: 13107200
+                committed: 69730304
+                used: 6333344
+                max: 69730304
+            GcThreadCount: 11,
+            endTime: 521639692
+            startTime: 521639682
+            memoryUsageAfterGC: 
+              'Code Cache': 
+                init: 2555904
+                committed: 9764864
+                used: 9589824
+                max: 50331648
+              'CMS Perm Gen': 
+                init: 21757952
+                committed: 75091968
+                used: 44995904
+                max: 268435456
+              'CMS Old Gen': 
+                init: 262406144
+                committed: 1973878784
+                used: 1257559928
+                max: 1973878784
+              'Par Eden Space':
+                init: 104988672
+                committed: 558432256
+                used: 0
+                max: 558432256
+              'Par Survivor Space': 
+                init: 13107200
+                committed: 69730304
+                used: 8012272
+                max: 69730304 }
+        ]
+        res.json 200, return_package
 
-  #   srv = http.createServer(app)
-  #   srv.listen(47432, post_data)
+      srv = http.createServer(app)
+      srv.listen(47432, post_data)
 
   # it "should support sending metrics to ganglia", (done) =>
   #   server = dgram.createSocket('udp4')

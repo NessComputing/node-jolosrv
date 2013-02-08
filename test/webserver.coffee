@@ -155,53 +155,45 @@ describe 'WebServer', ->
       rest.get "#{url}/clients/bob", (err, res, data) =>
         done()
 
-  # it "should be able to retrieve a detailed list of clients", (done) ->
-  #   url_href = "http://localhost:1234/jolokia/"
-  #   attrs = 
-  #     "java.lang":
-  #       "name=ConcurrentMarkSweep,type=GarbageCollector":
-  #         CollectionTime:
-  #           graph:
-  #             host: "examplehost.domain.com"
-  #             units: "gc/sec"
-  #             slope: "both"
-  #             tmax: 60
-  #             dmax: 180
+  it "should be able to retrieve a detailed list of clients", (done) ->
+    url_href = "http://localhost:1234/jolokia/"
+    template = 'concurrentms_collector'
 
-  #   rest.post "#{url}/clients", json: true,
-  #   body:
-  #     name: "bob"
-  #     url: url_href
-  #     attributes: attrs
-  #   , (err, res, data) =>
-  #     rest.post "#{url}/clients", json: true,
-  #     body:
-  #       name: "joe"
-  #       url: url_href
-  #       attributes: attrs
-  #     , (err, res, data) =>      
-  #       rest.get "#{url}/clients", json: true,
-  #       qs:
-  #         info: true
-  #       , (err, res, data) =>
-  #         clients = data.clients
-  #         for k in ['bob', 'joe']
-  #           assert.equal(clients[k].hasOwnProperty('java.lang'), true)
-  #           assert.equal(clients[k]['java.lang'].hasOwnProperty(
-  #             'name=ConcurrentMarkSweep,type=GarbageCollector'), true)
-  #           assert.equal(clients[k]['java.lang']\
-  #             ['name=ConcurrentMarkSweep,type=GarbageCollector']\
-  #             .hasOwnProperty('CollectionTime'), true)
-  #           assert.equal(clients[k]['java.lang']\
-  #             ['name=ConcurrentMarkSweep,type=GarbageCollector']\
-  #             ['CollectionTime'].hasOwnProperty('graph'), true)
+    rest.post "#{url}/clients", json: true,
+    body:
+      name: "bob"
+      url: url_href
+      template: template
+    , (err, res, data) =>
+      rest.post "#{url}/clients", json: true,
+      body:
+        name: "joe"
+        url: url_href
+        template: template
+      , (err, res, data) =>      
+        rest.get "#{url}/clients", json: true,
+        qs:
+          info: true
+        , (err, res, data) =>
+          clients = data.clients
 
-  #           graph_attrs = clients[k]['java.lang']\
-  #             ['name=ConcurrentMarkSweep,type=GarbageCollector']\
-  #             ['CollectionTime']['graph']
-  #           graph_attrs.host.should.equal "examplehost.domain.com"
-  #           graph_attrs.units.should.equal "gc/sec"
-  #           graph_attrs.slope.should.equal "both"
-  #           graph_attrs.tmax.should.equal 60
-  #           graph_attrs.dmax.should.equal 180
-  #         done()
+          client_list = Object.keys(clients)
+          client_list.length.should.equal 2
+          client_list.should.include 'bob'
+          client_list.should.include 'joe'
+
+          for k in ['bob', 'joe']
+            clients[k].mappings.length.should.equal 1
+            ainfo = clients[k].mappings[0]
+            ainfo.mbean.should.equal \
+            'java.lang:name=ConcurrentMarkSweep,type=GarbageCollector'
+            ainfo.attributes.length.should.equal 1
+            ainfo.attributes[0].name.should.equal 'CollectionTime'
+
+            ginfo = ainfo.attributes[0].graph
+            ginfo.name.should.equal 'Collection_Time'
+            ginfo.units.should.equal 'gc/sec'
+            ginfo.slope.should.equal 'both'
+            ginfo.tmax.should.equal 60
+            ginfo.dmax.should.equal 180
+          done()
