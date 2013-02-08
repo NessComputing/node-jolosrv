@@ -1,11 +1,14 @@
 rest = require 'request'
 
+Config = require '../src/config'
 Logger = require '../src/logger'
 WebServer = require '../src/webserver'
 
 describe 'WebServer', ->
   ws = null
   logger = Logger.get()
+  config = Config.get()
+  config.overrides({ 'template_dir': path.resolve(__dirname, 'templates') })
 
   url = "http://127.0.0.1:#{config.get('port')}"
 
@@ -24,213 +27,133 @@ describe 'WebServer', ->
       assert.notEqual data.version, undefined
       done()
 
-  # it "should be able to add a client", (done) ->
-  #   rest.post "#{url}/clients", json: true,
-  #   body:
-  #     name: "bob"
-  #     url: "http://localhost:1234/jolokia/"
-  #   , (err, res, data) =>
-  #     data.name.should.equal 'bob'
-  #     data.url.should.equal 'http://localhost:1234/jolokia/'
-  #     data.template.should.equal undefined
-  #     done()
+  it "should be able to list templates", (done) ->
+    ws.jsrv.load_all_templates () =>
+      rest.get "#{url}/templates", (err, res, data) ->
+        JSON.parse(data).templates.length.should.be.above(0)
+        done()
 
-  # it "throws 400 when adding a client without a name", (done) ->
-  #   rest.post "#{url}/clients", json: true,
-  #   body:
-  #     url: "http://localhost:1234/jolokia/"
-  #   , (err, res, data) =>
-  #     res.statusCode.should.equal 400
-  #     done()
+  it "should be able to add a client", (done) ->
+    rest.post "#{url}/clients", json: true,
+    body:
+      name: "bob"
+      url: "http://localhost:1234/jolokia/"
+    , (err, res, data) =>
+      data.name.should.equal 'bob'
+      data.url.should.equal 'http://localhost:1234/jolokia/'
+      assert.equal(data.template, undefined)
+      done()
 
-  # it "throws 400 when adding a client without a url", (done) ->
-  #   rest.post "#{url}/clients", json: true,
-  #   body:
-  #     name: "bob"
-  #   , (err, res, data) =>
-  #     res.statusCode.should.equal 400
-  #     done()
+  it "throws 400 when adding a client without a name", (done) ->
+    rest.post "#{url}/clients", json: true,
+    body:
+      url: "http://localhost:1234/jolokia/"
+    , (err, res, data) =>
+      res.statusCode.should.equal 400
+      done()
 
-  # it "should be able to update a client", (done) ->
-  #   rest.post "#{url}/clients", json: true,
-  #   body:
-  #     name: "bob"
-  #     url: "http://localhost:1234/jolokia/"
-  #   , (err, res, data) =>
-  #     data.name.should.equal 'bob'
-  #     data.url.should.equal 'http://localhost:1234/jolokia/'
-  #     Object.keys(data.template).length.should.equal 0
+  it "throws 400 when adding a client without a url", (done) ->
+    rest.post "#{url}/clients", json: true,
+    body:
+      name: "bob"
+    , (err, res, data) =>
+      res.statusCode.should.equal 400
+      done()
 
-  #     rest.post "#{url}/clients", json: true,
-  #     body:
-  #       name: "bob"
-  #       url: "http://localhost:1235/jolokia/"
-  #     , (err, res, data) =>
-  #       data.name.should.equal 'bob'
-  #       data.url.should.equal 'http://localhost:1235/jolokia/'
-  #       Object.keys(data.template).length.should.equal 0
-  #       done()
+  it "should be able to update a client", (done) ->
+    rest.post "#{url}/clients", json: true,
+    body:
+      name: "bob"
+      url: "http://localhost:1234/jolokia/"
+    , (err, res, data) =>
+      data.name.should.equal 'bob'
+      data.url.should.equal 'http://localhost:1234/jolokia/'
+      assert.equal(data.template, undefined)
 
-  # it "should be able to return a list of clients", (done) ->
-  #   rest.post "#{url}/clients", json: true,
-  #   body:
-  #     name: "bob"
-  #     url: "http://localhost:1234/jolokia/"
-  #   , (err, res, data) =>
-  #     data.name.should.equal 'bob'
-  #     data.url.should.equal 'http://localhost:1234/jolokia/'
-  #     Object.keys(data.attributes).length.should.equal 0
-  #     rest.get "#{url}/clients", json: true, (err, res, data) =>
-  #       data.clients.should.include 'bob'
-  #       Object.keys(data.clients).length.should.equal 1
-  #       done()
+      rest.post "#{url}/clients", json: true,
+      body:
+        name: "bob"
+        url: "http://localhost:1235/jolokia/"
+      , (err, res, data) =>
+        data.name.should.equal 'bob'
+        data.url.should.equal 'http://localhost:1235/jolokia/'
+        assert.equal(data.template, undefined)
+        done()
 
-  # it "should be able to remove a client", (done) ->
-  #   rest.post "#{url}/clients", json: true,
-  #   body:
-  #     name: "bob"
-  #     url: "http://localhost:1234/jolokia/"
-  #   , (err, res, data) =>
-  #     data.name.should.equal 'bob'
-  #     data.url.should.equal 'http://localhost:1234/jolokia/'
+  it "should be able to return a list of clients", (done) ->
+    rest.post "#{url}/clients", json: true,
+    body:
+      name: "bob"
+      url: "http://localhost:1234/jolokia/"
+    , (err, res, data) =>
+      data.name.should.equal 'bob'
+      data.url.should.equal 'http://localhost:1234/jolokia/'
+      assert.equal(data.template, undefined)
+      rest.get "#{url}/clients", json: true, (err, res, data) =>
+        data.clients.should.include 'bob'
+        Object.keys(data.clients).length.should.equal 1
+        done()
+
+  it "should be able to remove a client", (done) ->
+    rest.post "#{url}/clients", json: true,
+    body:
+      name: "bob"
+      url: "http://localhost:1234/jolokia/"
+    , (err, res, data) =>
+      data.name.should.equal 'bob'
+      data.url.should.equal 'http://localhost:1234/jolokia/'
       
-  #     rest.get "#{url}/clients", json: true, (err, res, data) =>
-  #       data.clients.should.include 'bob'
-  #       Object.keys(data.clients).length.should.equal 1
+      rest.get "#{url}/clients", json: true, (err, res, data) =>
+        data.clients.should.include 'bob'
+        Object.keys(data.clients).length.should.equal 1
 
-  #       rest.post "#{url}/clients", json: true,
-  #       body:
-  #         name: "joe"
-  #         url: "http://localhost:1235/jolokia/"
-  #       , (err, res, data) =>
-  #         data.name.should.equal 'joe'
-  #         data.url.should.equal 'http://localhost:1235/jolokia/'
+        rest.post "#{url}/clients", json: true,
+        body:
+          name: "joe"
+          url: "http://localhost:1235/jolokia/"
+        , (err, res, data) =>
+          data.name.should.equal 'joe'
+          data.url.should.equal 'http://localhost:1235/jolokia/'
 
-  #         rest.get "#{url}/clients", json: true, (err, res, data) =>
-  #           data.clients.should.include 'bob'
-  #           data.clients.should.include 'joe'
-  #           Object.keys(data.clients).length.should.equal 2
+          rest.get "#{url}/clients", json: true, (err, res, data) =>
+            data.clients.should.include 'bob'
+            data.clients.should.include 'joe'
+            Object.keys(data.clients).length.should.equal 2
 
-  #           rest.del "#{url}/clients/bob", json: true, (err, res, data) =>
-  #             data.clients.should.not.include 'bob'
-  #             data.clients.should.include 'joe'
-  #             Object.keys(data.clients).length.should.equal 1
-  #             done()
+            rest.del "#{url}/clients/bob", json: true, (err, res, data) =>
+              data.clients.should.not.include 'bob'
+              data.clients.should.include 'joe'
+              Object.keys(data.clients).length.should.equal 1
+              done()
 
-  # it "should be able to modify the template of a client", (done) ->
-  #   url_href = "http://localhost:1234/jolokia/"
-  #   template = "example_template"
+  it "should be able to modify the template of a client", (done) ->
+    url_href = "http://localhost:1234/jolokia/"
+    template = "example_template"
 
-  #   rest.post "#{url}/clients", json: true,
-  #   body:
-  #     name: "bob"
-  #     url: url_href
-  #     attributes: attrs
-  #   , (err, res, data) =>
-  #     data.name.should.equal 'bob'
-  #     data.url.should.equal 'http://localhost:1234/jolokia/'
-  #     assert.equal(data.attributes.hasOwnProperty('java.lang'), true)
-  #     assert.equal(data.attributes['java.lang'].hasOwnProperty(
-  #       'name=ConcurrentMarkSweep,type=GarbageCollector'), true)
-  #     assert.equal(data.attributes['java.lang']\
-  #       ['name=ConcurrentMarkSweep,type=GarbageCollector']\
-  #       .hasOwnProperty('CollectionTime'), true)
-  #     assert.equal(data.attributes['java.lang']\
-  #       ['name=ConcurrentMarkSweep,type=GarbageCollector']\
-  #       ['CollectionTime'].hasOwnProperty('graph'), true)
+    rest.post "#{url}/clients", json: true,
+    body:
+      name: "bob"
+      url: url_href
+      template: template
+    , (err, res, data) =>
+      data.name.should.equal 'bob'
+      data.url.should.equal 'http://localhost:1234/jolokia/'
+      data.template.should.equal "example_template"
+      done()
 
-  #     graph_attrs = data.attributes['java.lang']\
-  #       ['name=ConcurrentMarkSweep,type=GarbageCollector']\
-  #       ['CollectionTime']['graph']
-  #     graph_attrs.host.should.equal "examplehost.domain.com"
-  #     graph_attrs.units.should.equal "gc/sec"
-  #     graph_attrs.slope.should.equal "both"
-  #     graph_attrs.tmax.should.equal 60
-  #     graph_attrs.dmax.should.equal 180
-  #     done()
+  it "should be able to retrieve detailed info for a client", (done) ->
+    url_href = "http://localhost:1234/jolokia/"
+    template = "example_template"
 
-  # it "should be able to add attributes that are hash lookups to a client",
-  # (done) ->
-  #   url_href = "http://localhost:1234/jolokia/"
-  #   attrs = 
-  #     "java.lang":
-  #       "name=ConcurrentMarkSweep,type=GarbageCollector":
-  #         'LastGcInfo.memoryUsageAfterGc':
-  #           graph:
-  #             host: "examplehost.domain.com"
-  #             units: "gc/sec"
-  #             slope: "both"
-  #             tmax: 60
-  #             dmax: 180
-
-  #   rest.post "#{url}/clients", json: true,
-  #   body:
-  #     name: "bob"
-  #     url: url_href
-  #     attributes: attrs
-  #   , (err, res, data) =>
-  #     data.name.should.equal 'bob'
-  #     data.url.should.equal 'http://localhost:1234/jolokia/'
-  #     assert.equal(data.attributes.hasOwnProperty('java.lang'), true)
-  #     assert.equal(data.attributes['java.lang'].hasOwnProperty(
-  #       'name=ConcurrentMarkSweep,type=GarbageCollector'), true)
-  #     assert.equal(data.attributes['java.lang']\
-  #       ['name=ConcurrentMarkSweep,type=GarbageCollector']\
-  #       .hasOwnProperty('LastGcInfo.memoryUsageAfterGc'), true)
-  #     assert.equal(data.attributes['java.lang']\
-  #       ['name=ConcurrentMarkSweep,type=GarbageCollector']\
-  #       ['LastGcInfo.memoryUsageAfterGc'].hasOwnProperty('graph'), true)
-
-  #     graph_attrs = data.attributes['java.lang']\
-  #       ['name=ConcurrentMarkSweep,type=GarbageCollector']\
-  #       ['LastGcInfo.memoryUsageAfterGc']['graph']
-  #     graph_attrs.host.should.equal "examplehost.domain.com"
-  #     graph_attrs.units.should.equal "gc/sec"
-  #     graph_attrs.slope.should.equal "both"
-  #     graph_attrs.tmax.should.equal 60
-  #     graph_attrs.dmax.should.equal 180
-  #     done()
-
-  # it "should be able to retrieve detailed info for a client", (done) ->
-  #   url_href = "http://localhost:1234/jolokia/"
-  #   attrs = 
-  #     "java.lang":
-  #       "name=ConcurrentMarkSweep,type=GarbageCollector":
-  #         CollectionTime:
-  #           graph:
-  #             host: "examplehost.domain.com"
-  #             units: "gc/sec"
-  #             slope: "both"
-  #             tmax: 60
-  #             dmax: 180
-
-  #   rest.post "#{url}/clients", json: true,
-  #   body:
-  #     name: "bob"
-  #     url: url_href
-  #     attributes: attrs
-  #   , (err, res, data) =>
-  #     rest.get "#{url}/clients/bob", json: true, (err, res, data) =>
-  #       data = data.info
-  #       assert.equal(data.hasOwnProperty('java.lang'), true)
-  #       assert.equal(data['java.lang'].hasOwnProperty(
-  #         'name=ConcurrentMarkSweep,type=GarbageCollector'), true)
-  #       assert.equal(data['java.lang']\
-  #         ['name=ConcurrentMarkSweep,type=GarbageCollector']\
-  #         .hasOwnProperty('CollectionTime'), true)
-  #       assert.equal(data['java.lang']\
-  #         ['name=ConcurrentMarkSweep,type=GarbageCollector']\
-  #         ['CollectionTime'].hasOwnProperty('graph'), true)
-
-  #       graph_attrs = data['java.lang']\
-  #       ['name=ConcurrentMarkSweep,type=GarbageCollector']\
-  #       ['CollectionTime']['graph']
-  #       graph_attrs.host.should.equal "examplehost.domain.com"
-  #       graph_attrs.units.should.equal "gc/sec"
-  #       graph_attrs.slope.should.equal "both"
-  #       graph_attrs.tmax.should.equal 60
-  #       graph_attrs.dmax.should.equal 180
-  #       done()
+    rest.post "#{url}/clients", json: true,
+    body:
+      name: "bob"
+      url: url_href
+      template: template
+    , (err, res, data) =>
+      rest.get "#{url}/clients/bob", (err, res, data) =>
+        console.log data
+        done()
 
   # it "should be able to retrieve a detailed list of clients", (done) ->
   #   url_href = "http://localhost:1234/jolokia/"

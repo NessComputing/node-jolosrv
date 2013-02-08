@@ -40,7 +40,9 @@ class WebServer
 
     # Silence favicon requests.
     @app.get '/favicon.ico', (req, res, next) =>
-      res.json 404, "No favicon exists."
+      res.setHeader 'Content-Type', 'image/x-icon'
+      res.setHeader 'Cache-Control', 'public, max-age=864000'
+      res.end()
 
     # List all of the current clients. (Details if info=true)
     @app.get '/clients', (req, res, next) =>
@@ -69,7 +71,7 @@ class WebServer
     @app.get '/clients/:client', (req, res, next) =>
       client = req.params.client
       data = @jsrv.info_client(client)
-      if data == null
+      if data == null or data == undefined
         return res.json 404, message: "Client does not exist."
       res.json 200, info: data
 
@@ -82,5 +84,13 @@ class WebServer
     @app.get '/templates', (req, res, next) =>
       res.json 200,
         templates: @jsrv.list_templates()
+
+    # Get information for a given template
+    @app.get '/templates/:template', (req, res, next) =>
+      template_info = @jsrv.templates[req.params.template]
+      if template_info
+        res.json 200, template_info
+      else
+        res.json 404, error: "The requested template doesn't exist"
 
 module.exports = WebServer

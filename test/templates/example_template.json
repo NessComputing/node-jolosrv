@@ -1,0 +1,19 @@
+{
+  "name": "example_template",
+  "mappings": [
+    {
+      "mbean": "java.lang",
+      "attributes": [
+        {
+          "name": "CollectionTime",
+          "graph": {
+            "units": "gc/sec",
+            "slope": "both",
+            "tmax": 60,
+            "dmax": 180
+          }
+        }
+      ]
+    }
+  ]
+}

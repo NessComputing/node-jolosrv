@@ -1,5 +1,7 @@
 os = require 'os'
 fs = require 'fs'
+path = require 'path'
+
 Jolokia = require 'jolokia-client'
 async = require 'async'
 mkdirp = require 'mkdirp'
@@ -89,6 +91,13 @@ class JolokiaSrv
     delete @templates[template]
 
   ###*
+   * The list of current templates.
+   * @return {Array} The current list of templates
+  ###
+  list_templates: =>
+    Object.keys(@templates)
+
+  ###*
    * Add a new jolokia lookup client into the hash.
    * @param  {String}  (name) The name of the client to add
    * @param  {String}  (url) The jolokia url for the client
@@ -172,9 +181,32 @@ class JolokiaSrv
   info_client: (name) =>
     client = @jclients[name]
     if client
-      client['attributes']
+      if client.template
+        @generate_template_info(client.template)
+      else
+        {}
     else
       null
+
+  ###*
+   * 
+  ###
+  merge_parent_templates: (template) =>
+    {}
+
+  ###*
+   * Generates the information for a given template including parents.
+   * @param {String} (template) The template to generate information for
+   * @param {Object} The merged information for a given template
+  ###
+  generate_template_info: (template) =>
+    template_info   = @templates[template]
+    if template_info.inherits == null or template_info.inherits == undefined
+      template_info.inherits = []
+    if template_info.inherits.length > 0
+      info = @merge_parent_templates(template)
+    else
+      @templates[template]
 
   ###*
    * Generates a query information for the JMX update.
