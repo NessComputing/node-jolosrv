@@ -43,16 +43,16 @@ class JolokiaSrv
    * other operating systems will drop to an initial-load only.
   ###
   watch_templates: =>
-    @load_all_templates()
-    if os.platform() == 'linux'
-      fs.watch @config.get('template_dir')
-      , (event, filename) =>
-        fs.exists path.resolve(@config.get('template_dir'), filename)
-        , (exists) =>
-          if exists
-            @load_template(filename)
-          else
-            @unload_template(filename)
+    @load_all_templates () =>
+      if os.platform() == 'linux'
+        fs.watch @config.get('template_dir')
+        , (event, filename) =>
+          fs.exists path.resolve(@config.get('template_dir'), filename)
+          , (exists) =>
+            if exists
+              @load_template(filename)
+            else
+              @unload_template(filename)
 
   ###*
    * Loads all of the current templates in the template directory.
@@ -113,12 +113,12 @@ class JolokiaSrv
       cache: new Object()
 
   ###*
-   * Cleanup attributes for a client before they are cached for fast lookups.
-   * @param {Object} (attributes) The metrics attributes for a given client
+   * Cleanup mappings for a client before they are cached for fast lookups.
+   * @param {Object} (mappings) The metrics mappings for a given client
    * @param {Function} (fn) The callback function
   ###
-  convert_attribs_to_hash: (attributes, fn) =>
-    async.reduce attributes, new Object()
+  convert_mappings_to_hash: (mappings, fn) =>
+    async.reduce mappings, new Object()
     , (mbean_memo, mbean_attr, mbean_cb) =>
       mbean_memo[mbean_attr.mbean] ||= new Object()
 
@@ -167,11 +167,9 @@ class JolokiaSrv
   ###*
    * Removes a jolokia client from the hash.
    * @param  {String} (name) The name of the client to remove
-   * @return {String} The list of remaining clients
   ###
   remove_client: (name) =>
     delete @jclients[name]
-    @list_clients()
 
   ###*
    * Returns detailed information for the given client.
@@ -189,10 +187,11 @@ class JolokiaSrv
       null
 
   ###*
-   * 
+   * TODO: Add support for merging parent templates
   ###
   merge_parent_templates: (template) =>
-    {}
+    delete @templates[template].inherits
+    @templates[template]
 
   ###*
    * Generates the information for a given template including parents.
@@ -200,23 +199,26 @@ class JolokiaSrv
    * @param {Object} The merged information for a given template
   ###
   generate_template_info: (template) =>
-    template_info   = @templates[template]
-    if template_info.inherits == null or template_info.inherits == undefined
-      template_info.inherits = []
-    if template_info.inherits.length > 0
-      info = @merge_parent_templates(template)
+    if @templates[template] == undefined then return @templates[template]
+    if @templates[template].inherits == null \
+    or @templates[template].inherits == undefined
+      @templates[template].inherits = []
+
+    if @templates[template].inherits.length > 0
+      @merge_parent_templates(template)
     else
+      delete @templates[template].inherits
       @templates[template]
 
   ###*
    * Generates a query information for the JMX update.
-   * @param  {Object} (attributes) The detailed information for a client
+   * @param  {Object} (mappings) The detailed information for a client
    * @return {Array}  The list of info objects
   ###
-  generate_query_info: (attributes) =>
+  generate_query_info: (client) =>
     query_info = []
-    unless attributes == null
-      for m in attributes
+    unless client.mappings == null
+      for m in client.mappings
         for attr in m.attributes
           if attr.hasOwnProperty('graph') then g = attr.graph else g = {}
           if attr.hasOwnProperty('composites') then c = attr.composites
@@ -242,12 +244,12 @@ class JolokiaSrv
   ###*
    * Takes the query_info and response objects and gets the proper result set.
    * @param {String} (name) The name of the client to query
-   * @param {Object} (attrs) The metrics attributes for a client
+   * @param {Object} (mappings) The metrics mappings for a client
    * @param {Object} (response) The query response from jolokia
    * @param {Function} (fn) The callback function
   ###
-  lookup_attribute_or_composites: (name, attrs, response, fn) =>
-    @convert_attribs_to_hash attrs, (h_err, hattribs) =>
+  lookup_attribute_or_composites: (name, mappings, response, fn) =>
+    @convert_mappings_to_hash mappings, (h_err, hattribs) =>
       handle_response_obj = (item, cb) =>
         mbean = item.request.mbean
         attribute = item.request.attribute
@@ -287,8 +289,8 @@ class JolokiaSrv
    * @param {Function} (fn) The callback function
   ###
   query_jolokia: (name, fn) =>
-    attrs = @info_client(name)
-    query_info = @generate_query_info(attrs)
+    client = @info_client(name)
+    query_info = @generate_query_info(client)
     query = @generate_client_query(query_info)
     if query == [] then return null
     client = @jclients[name].client

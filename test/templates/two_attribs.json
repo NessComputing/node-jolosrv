@@ -1,0 +1,37 @@
+{
+  "name": "two_attribs",
+  "mappings": [
+  
+    {
+      "mbean": "java.lang:name=ConcurrentMarkSweep,type=GarbageCollector",
+      "attributes": [
+        {
+          "name": "CollectionCount",
+          "graph": {
+            "name": "Collection_Count",
+            "description": "GC Collection Count",
+            "units": "gc count",
+            "type": "int32"
+          }
+        },
+        {
+          "name": "LastGcInfo",
+          "composites": [
+            {
+              "name": "memoryUsageBeforeGC|Code Cache|init",
+              "graph": {
+                "name": "Memory_Usage_Before_GC_Code_Cache_Init",
+                "description": "Code Cache (Init) Memory Usage Before GC",
+                "units": "bytes",
+                "type": "int32",
+                "slope": "both"
+              }
+            }
+          ]
+
+        }
+      ]
+    }
+
+  ]
+}

@@ -7,6 +7,7 @@
         {
           "name": "CollectionTime",
           "graph": {
+            "name": "Collection_Time",
             "units": "gc/sec",
             "slope": "both",
             "tmax": 60,

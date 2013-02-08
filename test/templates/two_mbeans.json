@@ -1,0 +1,44 @@
+{
+  "name": "two_mbeans",
+  "mappings": [
+  
+    {
+      "mbean": "java.lang:name=ConcurrentMarkSweep,type=GarbageCollector",
+      "attributes": [
+        {
+          "name": "CollectionCount",
+          "graph": {
+            "name": "GC_Collection_Count",
+            "description": "GC Collection Count",
+            "units": "gc count",
+            "type": "int32",
+            "slope": "both",
+            "tmax": 60,
+            "dmax": 180
+          }
+        }
+      ]
+    },
+
+    {
+      "mbean": "java.lang:type=Memory",
+      "attributes": [
+        {
+          "name": "HeapMemoryUsage",
+          "composites": [
+            {
+              "name": "init",
+              "graph": {
+                "name": "Heap_init",
+                "description": "Initial Heap Memory Usage",
+                "units": "bytes",
+                "type": "int32"
+              }
+            }
+          ]
+        }
+      ]
+    }
+
+  ]
+}

@@ -86,137 +86,88 @@ describe 'JolokiaSrv', ->
     client['template'].should.equal 'test_template2'
     done()
 
-  # it "should be able to retrieve detailed info for a client", (done) ->
-  #   url_href = 'http://localhost:1234/jolokia/'
-  #   js.add_client 'test', url_href
-  #   , 'java.lang:somegroup':
-  #     'someattr':
-  #       graph: {}
+  it "should be able to retrieve detailed info for a client", (done) ->
+    js.load_all_templates () =>
+      url_href = 'http://localhost:1234/jolokia/'
+      js.add_client('test', url_href, 'empty_graph')
 
-  #   client = js.info_client('test')
-  #   assert.equal(client.hasOwnProperty('java.lang:somegroup'), true)
-  #   assert.equal(client['java.lang:somegroup']\
-  #     .hasOwnProperty('someattr'), true)
-  #   assert.equal(client['java.lang:somegroup']['someattr']\
-  #     .hasOwnProperty('graph'), true)
-  #   assert.equal(Object.keys(
-  #     client['java.lang:somegroup']['someattr']['graph']).length, 0)
-  #   done()
+      client = js.info_client('test')
+      client.mappings.length.should.equal 1
+      ainfo = client.mappings[0]
+      ainfo.mbean.should.equal 'java.lang:somegroup'
+      ainfo.attributes.length.should.equal 1
+      ainfo.attributes[0].name.should.equal 'someattr'
+      Object.keys(ainfo.attributes[0].graph).length.should.equal 0
+      done()
 
-  # it "should be able to retrieve detailed info for all clients", (done) =>
-  #   url_href = 'http://localhost:1234/jolokia/'
-  #   js.add_client 'test', url_href
-  #   , 'java.lang:somegroup':
-  #     'someattr':
-  #       graph: {}
+  it "should be able to retrieve detailed info for all clients", (done) =>
+    js.load_all_templates () =>
+      url_href = 'http://localhost:1234/jolokia/'
+      js.add_client 'test',  url_href, 'empty_graph'
+      js.add_client 'test2', url_href, 'empty_graph'
+      clients = js.info_all_clients()
 
-  #   js.add_client 'test2', url_href
-  #   , 'java.lang:somegroup':
-  #     'someattr':
-  #       graph: {}
+      client_list = Object.keys(clients)
+      client_list.should.include 'test'
+      client_list.should.include 'test2'
 
-  #   clients = js.info_all_clients()
-  #   for k in ['test', 'test2']
-  #     assert.equal(clients[k].hasOwnProperty('java.lang:somegroup'), true)
-  #     assert.equal(clients[k]['java.lang:somegroup']\
-  #       .hasOwnProperty('someattr'), true)
-  #     assert.equal(clients[k]['java.lang:somegroup']['someattr']\
-  #       .hasOwnProperty('graph'), true)
-  #     assert.equal(Object.keys(
-  #       clients[k]['java.lang:somegroup']['someattr']['graph']).length, 0)
-  #   done()
+      for k in ['test', 'test2']
+        ainfo = clients[k].mappings[0]
+        ainfo.mbean.should.equal 'java.lang:somegroup'
+        ainfo.attributes.length.should.equal 1
+        ainfo.attributes[0].name.should.equal 'someattr'
+        Object.keys(ainfo.attributes[0].graph).length.should.equal 0
+      done()
 
-  # it "should be able to generate an intelligent jolokia query", (done) =>
-  #   url_href = 'http://localhost:1234/jolokia/'
-  #   js.add_client 'test', url_href
-  #   , [
-  #       { mbean: 'java.lang:name=ConcurrentMarkSweep,type=GarbageCollector',
-  #       attributes: [
-  #         { name: 'CollectionCount'
-  #         graph:
-  #           name: "GC_Collection_Count"
-  #           description: "GC Collection Count"
-  #           units: "gc count"
-  #           type: "int32" }
-  #       ] },
-  #       { mbean: 'java.lang:type=Memory',
-  #       attributes: [
-  #         { name: 'HeapMemoryUsage'
-  #         composites: [
-  #           { name: 'init',
-  #           graph:
-  #             name: "Heap_init"
-  #             description: "Initial Heap Memory Usage"
-  #             units: "bytes"
-  #             type: "int32" }
-  #         ] }
-  #       ] }
-  #     ]
+  it "should be able to convert mappings to a hash", (done) =>
+    js.load_all_templates () =>
+      url_href = 'http://localhost:1234/jolokia/'
+      js.add_client 'test', url_href, 'two_attribs'
+      client = js.info_client('test')
 
-  #   attributes = js.info_client('test')
-  #   query_info = js.generate_query_info(attributes)
-  #   query_info.should.have.length 2
-  #   for q in query_info
-  #     Object.keys(q).should.include('mbean')
-  #     Object.keys(q).should.include('attribute')
-  #     if q.composites.length > 0
-  #       q.mbean.should.equal 'java.lang:type=Memory'
-  #       q.attribute.should.equal 'HeapMemoryUsage'
-  #       q.composites[0].name.should.equal 'init'
-  #       q.composites[0].graph.name.should.equal 'Heap_init'
-  #       q.composites[0].graph.type.should.equal 'int32'
-  #     else
-  #       q.mbean.should.equal \
-  #         'java.lang:name=ConcurrentMarkSweep,type=GarbageCollector'
-  #       q.attribute.should.equal 'CollectionCount'
-  #       q.graph.name.should.equal 'GC_Collection_Count'
-  #       q.graph.type.should.equal 'int32'
-  #   done()
+      js.convert_mappings_to_hash client.mappings, (err, results) =>
+        r = results['java.lang:name=ConcurrentMarkSweep,type=GarbageCollector']
+        Object.keys(r).should.have.length 2
+        for item in Object.keys(r)
+          if item == 'CollectionCount'
+            Object.keys(r[item]).should.have.length 1
+            Object.keys(r[item]).should.include 'graph'
+            Object.keys(r[item].graph).should.have.length 4
+          else if item == 'LastGcInfo'
+            Object.keys(r[item]).should.have.length 1
+            Object.keys(r[item]).should
+            .include 'memoryUsageBeforeGC|Code Cache|init'
+            Object.keys(r[item]['memoryUsageBeforeGC|Code Cache|init']).should
+            .include 'graph'
+            Object.keys(r[item]['memoryUsageBeforeGC|Code Cache|init'].graph)
+            .should.have.length 5
+          else
+            throw new Error("Should never get here")
+        done()
 
-  # it "should be able to convert attributes to a hash", (done) =>
-  #   url_href = 'http://localhost:47432/jolokia/'
-  #   js.add_client 'test', url_href
-  #   , [
-  #     { mbean: 'java.lang:name=ConcurrentMarkSweep,type=GarbageCollector',
-  #     attributes: [
-  #       { name: 'CollectionCount'
-  #       graph:
-  #         name: "GC_Collection_Count"
-  #         description: "GC Collection Count"
-  #         units: "gc count"
-  #         type: "int32" },
-
-  #       { name: 'LastGcInfo'
-  #       composites: [
-  #         { name: 'memoryUsageBeforeGC|Code Cache|init',
-  #         graph:
-  #           name: "MemoryUsage_Before_GC_Code_Cache_Init"
-  #           description: "Code Cache (Init) Memory Usage Before GC"
-  #           units: "bytes"
-  #           type: "int32" }
-  #       ] }
-  #     ] },
-  #   ]
-
-  #   js.convert_attribs_to_hash js.info_client('test'), (err, result) =>
-  #     r = result['java.lang:name=ConcurrentMarkSweep,type=GarbageCollector']
-  #     Object.keys(r).should.have.length 2
-  #     for item in Object.keys(r)
-  #       if item == 'CollectionCount'
-  #         Object.keys(r[item]).should.have.length 1
-  #         Object.keys(r[item]).should.include 'graph'
-  #         Object.keys(r[item].graph).should.have.length 4
-  #       else if item == 'LastGcInfo'
-  #         Object.keys(r[item]).should.have.length 1
-  #         Object.keys(r[item]).should
-  #         .include 'memoryUsageBeforeGC|Code Cache|init'
-  #         Object.keys(r[item]['memoryUsageBeforeGC|Code Cache|init']).should
-  #         .include 'graph'
-  #         Object.keys(r[item]['memoryUsageBeforeGC|Code Cache|init'].graph)
-  #         .should.have.length 4
-  #       else
-  #         throw new Error("Should never get here")
-  #     done()
+  it "should be able to generate an intelligent jolokia query", (done) =>
+    js.load_all_templates () =>
+      url_href = 'http://localhost:1234/jolokia/'
+      js.add_client 'test', url_href, 'two_mbeans'
+      client = js.info_client('test')
+      query_info = js.generate_query_info(client)
+      query_info.should.have.length 2
+      for q in query_info
+        Object.keys(q).should.include('mbean')
+        Object.keys(q).should.include('attribute')
+        if q.composites.length > 0
+          q.mbean.should.equal 'java.lang:type=Memory'
+          q.attribute.should.equal 'HeapMemoryUsage'
+          q.composites[0].name.should.equal 'init'
+          q.composites[0].graph.name.should.equal 'Heap_init'
+          q.composites[0].graph.type.should.equal 'int32'
+        else
+          q.mbean.should.equal \
+            'java.lang:name=ConcurrentMarkSweep,type=GarbageCollector'
+          q.attribute.should.equal 'CollectionCount'
+          q.graph.name.should.equal 'GC_Collection_Count'
+          q.graph.type.should.equal 'int32'
+      done()
 
   # it "should be able to query a basic jolokia mbean", (done) =>
   #   post_data = () =>

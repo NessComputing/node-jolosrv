@@ -73,7 +73,7 @@ class WebServer
       data = @jsrv.info_client(client)
       if data == null or data == undefined
         return res.json 404, message: "Client does not exist."
-      res.json 200, info: data
+      res.json 200, data
 
     # Delete a client.
     @app.del '/clients/:client', (req, res, next) =>

@@ -121,10 +121,11 @@ describe 'WebServer', ->
             Object.keys(data.clients).length.should.equal 2
 
             rest.del "#{url}/clients/bob", json: true, (err, res, data) =>
-              data.clients.should.not.include 'bob'
-              data.clients.should.include 'joe'
-              Object.keys(data.clients).length.should.equal 1
-              done()
+              rest.get "#{url}/clients", json: true, (err, res, data) =>
+                data.clients.should.not.include 'bob'
+                data.clients.should.include 'joe'
+                Object.keys(data.clients).length.should.equal 1
+                done()
 
   it "should be able to modify the template of a client", (done) ->
     url_href = "http://localhost:1234/jolokia/"
@@ -152,7 +153,6 @@ describe 'WebServer', ->
       template: template
     , (err, res, data) =>
       rest.get "#{url}/clients/bob", (err, res, data) =>
-        console.log data
         done()
 
   # it "should be able to retrieve a detailed list of clients", (done) ->
