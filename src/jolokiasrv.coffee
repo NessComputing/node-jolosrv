@@ -311,12 +311,12 @@ class JolokiaSrv
   ###*
    * Starts up the gmond metric spooler.
   ###
-  start_gmond: (host, port, spoof) =>
+  start_gmond: =>
     return unless @interval
     if @gmond_interval_id then stop_gmond()
     @gmond_interval_id = setInterval () =>
       @submit_metrics()
-    , @interval
+    , (@interval * 1000)
 
   ###*
    * Stops the gmond metric spooler.
@@ -338,23 +338,44 @@ class JolokiaSrv
    *        group:  'mygraph_group' }
   ###
   submit_metrics: =>
-    # TODO: This is incomplete
-    # util = require 'util'
+    util = require 'util'
     clientlist = Object.keys(@jclients)
     unless clientlist.length > 0 then return
 
     # recursive_walk
+    walk_graphs = (client, cache) =>
+      # console.log ""
+      # console.log util.inspect(cache, true, 10)
+      if Object.keys(@jclients[client]) == 0
+        cb(null)
 
-    compile_and_submit_metric = (mattr) =>
-      metric = mattr.graph
-      metric.value = mattr.value
-      metric.hostname = "#{client}:#{client}"
-      @gmetric.send()
+      for mbean in Object.keys(cache)
+        for attrib in Object.keys(cache[mbean])
+          ainfo = cache[mbean][attrib]
+          if ainfo.hasOwnProperty('graph') and ainfo.hasOwnProperty('value')
+            console.log attrib
+            # console.log 'COOOL'
+            # compile_and_submit_metric(client, attrib.graph, attrib.value)
+
+          for comp in Object.keys(cache[mbean][attrib])
+            for c in Object.keys(cache[mbean][attrib][comp])
+              if c.hasOwnProperty('graph') and c.hasOwnProperty('value')
+                console.log 'AWESOME'
+                # compile_and_submit_metric(client, c.graph, c.value)
+
+    # create gmetric data and submit
+    compile_and_submit_metric = (client, graph, value) =>
+      metric = graph
+      metric.value = value
+      metric.hostname = client
+      console.log metric
+
+      # @gmetric.send()
 
     async.forEach clientlist
     , (client, cb) =>
-      if Object.keys(@jclients[client]) > 0 then cb(null)
-      # else console.log util.inspect(@jclients[client].cache, true, 10)
+      walk_graphs(client, @jclients[client].cache)
     , (err) =>
+      @logger.error "Error submitting metrics: #{err}"
 
 module.exports = JolokiaSrv

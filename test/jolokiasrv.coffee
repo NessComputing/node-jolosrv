@@ -334,66 +334,46 @@ describe 'JolokiaSrv', ->
       srv = http.createServer(app)
       srv.listen(47432, post_data)
 
-  # it "should support sending metrics to ganglia", (done) =>
-  #   server = dgram.createSocket('udp4')
-  #   url_href = 'http://localhost:47432/jolokia/'
-  #   js.add_client 'test', url_href
-  #   , [
-  #     { mbean: 'java.lang:name=ParNew,type=GarbageCollector',
-  #     attributes: [
-  #       { name: 'LastGcInfo'
-  #       composites: [
-  #         { name: 'memoryUsageBeforeGc|Code Cache|init',
-  #         graph:
-  #           name: "MemoryUsage_Before_GC_Code_Cache_Init"
-  #           description: "Code Cache (Init) Memory Usage Before GC"
-  #           units: "bytes"
-  #           type: "int32" },
-  #         { name: 'memoryUsageBeforeGc|Code Cache|committed',
-  #         graph:
-  #           name: "MemoryUsage_Before_GC_Code_Cache_Committed"
-  #           description: "Code Cache (Committed) Memory Usage Before GC"
-  #           units: "bytes"
-  #           type: "int32" }
-  #       ] }
-  #     ] }
-  #   ]
+  it "should support sending metrics to ganglia", (done) =>
+    js = new JolokiaSrv(0.06)
+    js.load_all_templates () =>
+      server = dgram.createSocket('udp4')
+      url_href = 'http://localhost:47432/jolokia/'
+      js.add_client 'test', url_href, 'init_and_committed'
 
-  #   js.jclients['test'].cache =
-  #     'java.lang:name=ParNew,type=GarbageCollector':
-  #       LastGcInfo: 
-  #         'memoryUsageBeforeGc|Code Cache|init': 
-  #           value: 2555904
-  #           graph:
-  #             name: 'MemoryUsage_Before_GC_Code_Cache_Init'
-  #             units: 'bytes'
-  #             type: 'int32'
-  #             description: 'Code Cache (Init) Memory Usage Before GC'
+      js.jclients['test'].cache =
+        'java.lang:name=ParNew,type=GarbageCollector':
+          LastGcInfo: 
+            'memoryUsageBeforeGC|Code Cache|init': 
+              value: 2555904
+              graph:
+                name: 'MemoryUsage_Before_GC_Code_Cache_Init'
+                units: 'bytes'
+                type: 'int32'
+                description: 'Code Cache (Init) Memory Usage Before GC'
 
-  #         'memoryUsageBeforeGc|Code Cache|committed': 
-  #           value: 9764864
-  #           graph:
-  #             name: 'MemoryUsage_Before_GC_Code_Cache_Committed'
-  #             units: 'bytes'
-  #             type: 'int32'
-  #             description: 'Code Cache (Committed) Memory Usage Before GC'
+            'memoryUsageBeforeGC|Code Cache|committed': 
+              value: 9764864
+              graph:
+                name: 'MemoryUsage_Before_GC_Code_Cache_Committed'
+                units: 'bytes'
+                type: 'int32'
+                description: 'Code Cache (Committed) Memory Usage Before GC'
 
-  #   server.on 'message', (msg, rinfo) =>
-  #     console.log msg
+      server.on 'message', (msg, rinfo) =>
+        console.log msg
 
-  #   server.on 'listening', () =>
-  #     js.submit_metrics()
-  #     setTimeout () =>
-  #       server.close()
-  #     , 10
+      server.on 'listening', () =>
+        setTimeout () =>
+          server.close()
+        , 1000
 
-  #   server.on 'close', () =>
-  #     done()
+      server.on 'close', () =>
+        done()
 
-  #   server.bind(43278)
+      server.bind(43278)
+      js.start_gmond()
 
-  # it "should support templating for metric aggregation"
+  it "should support compound templates"
 
-  # it "should support compound templates"
-
-  # it "should have sane default graph configurations"
+  it "should have sane default graph configurations"
