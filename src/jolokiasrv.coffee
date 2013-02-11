@@ -1,6 +1,7 @@
 os = require 'os'
 fs = require 'fs'
 path = require 'path'
+util = require 'util'
 
 Jolokia = require 'jolokia-client'
 async = require 'async'
@@ -14,8 +15,7 @@ Logger = require './logger'
  * Jolokia server client wrapper.
 ###
 class JolokiaSrv
-  constructor: (@interval) ->
-    @interval or= 20
+  constructor: (@interval=20) ->
     @jclients  = new Object()
     @templates = new Object()
 
@@ -59,14 +59,14 @@ class JolokiaSrv
    * @param {Function} (fn) The callback function
   ###
   load_all_templates: (fn) =>
-    @stop_gmond
+    @stop_gmond()
     fs.readdir path.resolve(@config.get('template_dir')), (err, files) =>
       if files == undefined
         json_files = []
       else
         json_files = files.filter (x) -> x.match /\.json/
-      async.forEach json_files, @load_template, (err) =>
-        @start_gmond
+      async.each json_files, @load_template, (err) =>
+        @start_gmond()
         if fn then fn(err)
 
   ###*
@@ -77,7 +77,7 @@ class JolokiaSrv
     fs.readFile path.resolve(@config.get('template_dir'), template)
       , 'utf8', (err, data) =>
         if (err)
-          @logger.error "Error reading file: #{template}"
+          @logger.error "Error reading file: #{template}: #{err}"
         else
           try
             json_data = JSON.parse(data)
@@ -102,15 +102,17 @@ class JolokiaSrv
 
   ###*
    * Add a new jolokia lookup client into the hash.
-   * @param  {String}  (name) The name of the client to add
-   * @param  {String}  (url) The jolokia url for the client
-   * @param  {Object}  (attributes) The attributes to lookup for the client
-   * @return {Object}  The jolokia client that was added
+   * @param  {String} (name) The name of the client to add
+   * @param  {String} (url) The jolokia url for the client
+   * @param  {Object} (template) The attributes template
+   * @param  {Object} (cluster) The cluster for the client
+   * @return {Object} The jolokia client that was added
   ###
-  add_client: (name, url, template) =>
+  add_client: (name, url, template, cluster) =>
     @jclients[name] =
       client: new Jolokia(url)
       name: name
+      cluster: cluster
       url: url
       template: template
       cache: new Object()
@@ -139,7 +141,7 @@ class JolokiaSrv
         # Handle composites
         if a_attr.hasOwnProperty('composites') and
         a_attr.composites.length > 0
-          async.forEach a_attr.composites
+          async.each a_attr.composites
           , (cmp_attr, cmp_cb) =>
             a_memo[a_attr.name][cmp_attr.name] ||= new Object()
             if cmp_attr.hasOwnProperty('graph') and
@@ -271,18 +273,37 @@ class JolokiaSrv
             return walk[list]
 
         # Add the top-level value if it is a simple k/v
-        if hattribs[mbean][attribute].hasOwnProperty('graph') and
-        Object.keys(hattribs[mbean][attribute].graph).length > 0
-          hattribs[mbean][attribute].value = value
+        try
+          if hattribs[mbean][attribute].hasOwnProperty('graph') and
+          Object.keys(hattribs[mbean][attribute].graph).length > 0
+            hattribs[mbean][attribute].value = value
+        catch error
+          @logger.error """
+          Error parsing attribute: #{error}
+          mbean: #{mbean}
+          attribute: #{attribute}
+
+          jolokia_hash: #{util.inspect(hattribs, true, 10)}
+          """
 
         # For each key that isn't graph or value, get their values
         keys = (k for k in Object.keys(hattribs[mbean][attribute]) when \
         k != 'graph' and k!= 'value')
         for k in keys
-          hattribs[mbean][attribute][k].value = retrieve_composite_value(k)
+          try
+            hattribs[mbean][attribute][k].value = retrieve_composite_value(k)
+          catch error
+            @logger.error """
+            Error parsing composite attribute: #{error}
+            mbean: #{mbean}
+            attribute: #{attribute}
+            composite: #{k}
+
+            jolokia_hash: #{util.inspect(hattribs, true, 10)}
+            """
         cb(null)
 
-      async.forEach response, handle_response_obj, (err) =>
+      async.each response, handle_response_obj, (err) =>
         @jclients[name].cache = hattribs
         fn(null, hattribs)
 
@@ -292,7 +313,6 @@ class JolokiaSrv
    * @param {Function} (fn) The callback function
   ###
   query_jolokia: (name, fn) =>
-    util = require 'util'
     cinfo = @info_client(name)
     query_info = @generate_query_info(cinfo)
     query = @generate_client_query(query_info)
@@ -300,6 +320,24 @@ class JolokiaSrv
     client = @jclients[name].client
     client.read query, (response) =>
       @lookup_attribute_or_composites(name, cinfo.mappings, response, fn)
+
+  ###*
+   * Attempt to query each of the nodes, ignoring failures.
+  ###
+  query_all_jolokia_nodes: (cb) =>
+    attempt_to_query = (client, fn) =>
+      try
+        @query_jolokia client, (err, attribs) =>
+          fn(null)
+      catch error
+        fn(error)
+
+    client_list = Object.keys(@jclients)
+    if client_list.length > 0
+      async.each client_list, attempt_to_query, (err) =>
+        if cb then cb(null)
+    else
+      if cb then cb(null)
 
   ###*
    * Returns detailed information for all clients.
@@ -316,10 +354,12 @@ class JolokiaSrv
   ###
   start_gmond: =>
     return unless @interval
-    if @gmond_interval_id then stop_gmond()
-    @gmond_interval_id = setInterval () =>
-      @submit_metrics()
-    , (@interval * 1000)
+    if @gmond_interval_id then @stop_gmond()
+    @query_all_jolokia_nodes () =>
+      @gmond_interval_id = setInterval () =>
+        @query_all_jolokia_nodes()
+        @submit_metrics()
+      , (@interval * 1000)
 
   ###*
    * Stops the gmond metric spooler.
@@ -333,19 +373,20 @@ class JolokiaSrv
    * Submits gmetric data to the gmond target.
    * ex:  { host:  'exhost.domain.com',
    *        name:  'mygraphname',
-   *        units: 'percentage', 
+   *        units: 'percentage',
    *        type:  'int32',
    *        slope: 'both',
    *        tmax:   60,
    *        dmax:   120,
-   *        group:  'mygraph_group' }
+   *        group:  'mygraph_group',
+   *        cluster: 'example_cluster' }
   ###
   submit_metrics: =>
     clientlist = Object.keys(@jclients)
     unless clientlist.length > 0 then return
 
     # recursive_walk
-    walk_graphs = (client, cache) =>
+    walk_graphs = (client, cache, cluster) =>
       if Object.keys(@jclients[client]) == 0
         cb(null)
 
@@ -353,20 +394,23 @@ class JolokiaSrv
         for attrib in Object.keys(cache[mbean])
           ainfo = cache[mbean][attrib]
           if ainfo.hasOwnProperty('graph') and ainfo.hasOwnProperty('value')
-            compile_and_submit_metric(client, ainfo.graph, ainfo.value)
+            compile_and_submit_metric(
+              client, ainfo.graph, ainfo.value, cluster)
 
           for comp in Object.keys(cache[mbean][attrib])
             c = cache[mbean][attrib][comp]
             if c.hasOwnProperty('graph') and c.hasOwnProperty('value')
-              compile_and_submit_metric(client, c.graph, c.value)
+              compile_and_submit_metric(
+                client, c.graph, c.value, cluster)
 
     # create gmetric data and submit
-    compile_and_submit_metric = (client, graph, value) =>
+    compile_and_submit_metric = (client, graph, value, cluster) =>
       metric = graph
       metric.value = value
-      cluster_prefix = @config.get('cluster_prefix')
-      if cluster_prefix != null and cluster_prefix != undefined
-        client = "#{cluster_prefix}_#{client}"
+      if cluster == null or cluster == undefined
+        metric.cluster = @config.get('cluster')
+      else
+        metric.cluster = cluster
       metric.hostname = client
       metric.spoof = true
       metric.spoof_host = client
@@ -374,9 +418,9 @@ class JolokiaSrv
       if metric.slope == undefined then metric.slope = 'both'
       @gmetric.send(@config.get('gmetric'), @config.get('gPort'), metric)
 
-    async.forEach clientlist
+    async.each clientlist
     , (client, cb) =>
-      walk_graphs(client, @jclients[client].cache)
+      walk_graphs(client, @jclients[client].cache, @jclients[client].cluster)
     , (err) =>
       @logger.error "Error submitting metrics: #{err}"
 
