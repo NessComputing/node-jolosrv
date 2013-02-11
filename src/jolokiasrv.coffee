@@ -61,7 +61,10 @@ class JolokiaSrv
   load_all_templates: (fn) =>
     @stop_gmond
     fs.readdir path.resolve(@config.get('template_dir')), (err, files) =>
-      json_files = files.filter (x) -> x.match /\.json/
+      if files == undefined
+        json_files = []
+      else
+        json_files = files.filter (x) -> x.match /\.json/
       async.forEach json_files, @load_template, (err) =>
         @start_gmond
         if fn then fn(err)
