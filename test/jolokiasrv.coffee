@@ -7,18 +7,21 @@ express = require 'express'
 
 JolokiaSrv = require '../src/jolokiasrv'
 Config = require '../src/config'
+Gmetric = require 'gmetric'
 
 describe 'JolokiaSrv', ->
   js = null
   config = Config.get()
-  config.overrides({ 'template_dir': path.resolve(__dirname, 'templates') })
+  gmetric = new Gmetric()
 
   beforeEach (done) ->
+    config.overrides({ 'template_dir': path.resolve(__dirname, 'templates') })
     js = new JolokiaSrv(0)
     done()
 
   afterEach (done) ->
     js = null
+    config.overrides({})
     done()
 
   it "should be able to add a client", (done) ->
@@ -335,7 +338,14 @@ describe 'JolokiaSrv', ->
       srv.listen(47432, post_data)
 
   it "should support sending metrics to ganglia", (done) =>
-    js = new JolokiaSrv(0.06)
+    config.overrides
+      template_dir: path.resolve(__dirname, 'templates')
+      gmetric: '127.0.0.1'
+      gPort: 43278
+
+    util = require 'util'
+
+    js = new JolokiaSrv(0.01)
     js.load_all_templates () =>
       server = dgram.createSocket('udp4')
       url_href = 'http://localhost:47432/jolokia/'
@@ -343,8 +353,8 @@ describe 'JolokiaSrv', ->
 
       js.jclients['test'].cache =
         'java.lang:name=ParNew,type=GarbageCollector':
-          LastGcInfo: 
-            'memoryUsageBeforeGC|Code Cache|init': 
+          LastGcInfo:
+            'memoryUsageBeforeGC|Code Cache|init':
               value: 2555904
               graph:
                 name: 'MemoryUsage_Before_GC_Code_Cache_Init'
@@ -361,12 +371,35 @@ describe 'JolokiaSrv', ->
                 description: 'Code Cache (Committed) Memory Usage Before GC'
 
       server.on 'message', (msg, rinfo) =>
-        console.log msg
+        msg_type = msg.readInt32BE(0)
+        if msg_type == 128
+          meta = gmetric.unpack(msg)
+          if meta.name == "MemoryUsage_Before_GC_Code_Cache_Init"
+            meta.units.should.equal 'bytes'
+            meta.type.should.equal 'int32'
+          else if meta.name == "MemoryUsage_Before_GC_Code_Cache_Committed"
+            meta.units.should.equal 'bytes'
+            meta.type.should.equal 'int32'
+          else
+            throw new Error("Invalid gmetric metadata UDP sent")
+
+        else if  msg_type == 133
+          data = gmetric.unpack(msg);
+          if data.name == "MemoryUsage_Before_GC_Code_Cache_Init"
+            data.hostname.should.equal 'test'
+            data.spoof.should.equal true
+            data.value.should.equal '2555904'
+          else if data.name == "MemoryUsage_Before_GC_Code_Cache_Committed"
+            data.hostname.should.equal 'test'
+            data.spoof.should.equal true
+            data.value.should.equal '9764864'
+          else
+            throw new Error("Invalid gmetric data UDP sent")
 
       server.on 'listening', () =>
         setTimeout () =>
           server.close()
-        , 1000
+        , 20
 
       server.on 'close', () =>
         done()
@@ -375,5 +408,3 @@ describe 'JolokiaSrv', ->
       js.start_gmond()
 
   it "should support compound templates"
-
-  it "should have sane default graph configurations"

@@ -338,14 +338,11 @@ class JolokiaSrv
    *        group:  'mygraph_group' }
   ###
   submit_metrics: =>
-    util = require 'util'
     clientlist = Object.keys(@jclients)
     unless clientlist.length > 0 then return
 
     # recursive_walk
     walk_graphs = (client, cache) =>
-      # console.log ""
-      # console.log util.inspect(cache, true, 10)
       if Object.keys(@jclients[client]) == 0
         cb(null)
 
@@ -353,24 +350,26 @@ class JolokiaSrv
         for attrib in Object.keys(cache[mbean])
           ainfo = cache[mbean][attrib]
           if ainfo.hasOwnProperty('graph') and ainfo.hasOwnProperty('value')
-            console.log attrib
-            # console.log 'COOOL'
-            # compile_and_submit_metric(client, attrib.graph, attrib.value)
+            compile_and_submit_metric(client, ainfo.graph, ainfo.value)
 
           for comp in Object.keys(cache[mbean][attrib])
-            for c in Object.keys(cache[mbean][attrib][comp])
-              if c.hasOwnProperty('graph') and c.hasOwnProperty('value')
-                console.log 'AWESOME'
-                # compile_and_submit_metric(client, c.graph, c.value)
+            c = cache[mbean][attrib][comp]
+            if c.hasOwnProperty('graph') and c.hasOwnProperty('value')
+              compile_and_submit_metric(client, c.graph, c.value)
 
     # create gmetric data and submit
     compile_and_submit_metric = (client, graph, value) =>
       metric = graph
       metric.value = value
+      cluster_prefix = @config.get('cluster_prefix')
+      if cluster_prefix != null and cluster_prefix != undefined
+        client = "#{cluster_prefix}_#{client}"
       metric.hostname = client
-      console.log metric
-
-      # @gmetric.send()
+      metric.spoof = true
+      metric.spoof_host = client
+      if metric.type == undefined then metric.type = 'int32'
+      if metric.slope == undefined then metric.slope = 'both'
+      @gmetric.send(@config.get('gmetric'), @config.get('gPort'), metric)
 
     async.forEach clientlist
     , (client, cb) =>

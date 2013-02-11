@@ -8,16 +8,17 @@ describe 'WebServer', ->
   ws = null
   logger = Logger.get()
   config = Config.get()
-  config.overrides({ 'template_dir': path.resolve(__dirname, 'templates') })
 
   url = "http://127.0.0.1:#{config.get('port')}"
 
   beforeEach (done) ->
+    config.overrides({ 'template_dir': path.resolve(__dirname, 'templates') })
     logger.clear()
     ws = new WebServer(config.get('port'))
     done()
 
   afterEach (done) ->
+    config.overrides({})
     ws.srv.close()
     done()
 
