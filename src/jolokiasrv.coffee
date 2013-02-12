@@ -355,11 +355,10 @@ class JolokiaSrv
   start_gmond: =>
     return unless @interval
     if @gmond_interval_id then @stop_gmond()
-    @query_all_jolokia_nodes () =>
-      @gmond_interval_id = setInterval () =>
-        @query_all_jolokia_nodes()
-        @submit_metrics()
-      , (@interval * 1000)
+    @gmond_interval_id = setInterval () =>
+      @query_all_jolokia_nodes()
+      @submit_metrics()
+    , (@interval * 1000)
 
   ###*
    * Stops the gmond metric spooler.
