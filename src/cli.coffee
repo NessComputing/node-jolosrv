@@ -24,6 +24,11 @@ class CLI
       .describe('t', 'The template directory to watch')
       .default('t', '/opt/jolosrv/templates')
 
+      # ganglia gmetric cluster prefix (environment)
+      .alias('e', 'cluster_prefix')
+      .describe('e', 'The ganglia gmond cluster prefix')
+      .default('e', null)
+
       # ganglia gmetric default cluster
       .alias('C', 'cluster')
       .describe('C', 'The default gmond cluster')

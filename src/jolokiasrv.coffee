@@ -407,10 +407,15 @@ class JolokiaSrv
     compile_and_submit_metric = (client, graph, value, cluster) =>
       metric = graph
       metric.value = value
+
       if cluster == null or cluster == undefined
         metric.cluster = @config.get('cluster')
       else
         metric.cluster = cluster
+      cluster = [@config.get('cluster_prefix'), metric.cluster].filter (x) ->
+        x != null and x != undefined
+
+      metric.cluster = cluster.join('_')
       metric.hostname = client
       metric.spoof = true
       metric.spoof_host = client
