@@ -43,7 +43,7 @@ class JolokiaSrv
    * other operating systems will drop to an initial-load only.
   ###
   watch_templates: =>
-    @load_all_templates () =>
+    @load_all_templates (err) =>
       if os.platform() == 'linux'
         fs.watch @config.get('template_dir')
         , (event, filename) =>
