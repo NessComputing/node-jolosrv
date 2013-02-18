@@ -81,7 +81,9 @@ class JolokiaSrv
         else
           try
             json_data = JSON.parse(data)
-            @templates[json_data.name] = { mappings: json_data.mappings }
+            @templates[json_data.name] =
+              inherits: json_data.inherits
+              mappings: json_data.mappings
           catch error
             @logger.error "Error parsing `#{template}`: #{error}"
         unless fn == undefined then fn(err)
@@ -192,6 +194,17 @@ class JolokiaSrv
       null
 
   ###*
+   * Sort mbean entries to handle jolokia silliness.
+   * @param  {String} (mbean) The mbean name to sort
+   * @return {String} The sorted mbean string
+  ###
+  sort_mbean: (mbean) =>
+    minfo = mbean.split(':')
+    suffix = minfo.pop()
+    minfo.push(suffix.split(',').sort().join(','))
+    minfo.join(':')
+
+  ###*
    * TODO: Add support for merging parent templates
   ###
   merge_parent_templates: (template) =>
@@ -207,9 +220,9 @@ class JolokiaSrv
     if @templates[template] == undefined then return @templates[template]
     if @templates[template].inherits == null \
     or @templates[template].inherits == undefined
-      @templates[template].inherits = []
+      @templates[template].inherits = null
 
-    if @templates[template].inherits.length > 0
+    if @templates[template].inherits != undefined
       @merge_parent_templates(template)
     else
       delete @templates[template].inherits
@@ -229,7 +242,7 @@ class JolokiaSrv
           if attr.hasOwnProperty('composites') then c = attr.composites
           else c = []
           query_info.push
-            mbean: m.mbean
+            mbean: @sort_mbean(m.mbean)
             attribute: attr.name
             graph: g
             composites: c
@@ -243,7 +256,7 @@ class JolokiaSrv
   generate_client_query: (query_info) =>
     query = []
     for q in query_info
-      query.push({ mbean: q.mbean, attribute: q.attribute })
+      query.push({ mbean: @sort_mbean(q.mbean), attribute: q.attribute })
     return query
 
   ###*
@@ -256,7 +269,7 @@ class JolokiaSrv
   lookup_attribute_or_composites: (name, mappings, response, fn) =>
     @convert_mappings_to_hash mappings, (h_err, hattribs) =>
       handle_response_obj = (item, cb) =>
-        mbean = item.request.mbean
+        mbean = @sort_mbean(item.request.mbean)
         attribute = item.request.attribute
         value = item.value
 
@@ -390,6 +403,7 @@ class JolokiaSrv
         cb(null)
 
       for mbean in Object.keys(cache)
+        mbean = @sort_mbean(mbean)
         for attrib in Object.keys(cache[mbean])
           ainfo = cache[mbean][attrib]
           if ainfo.hasOwnProperty('graph') and ainfo.hasOwnProperty('value')
