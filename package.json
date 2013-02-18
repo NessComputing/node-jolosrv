@@ -1,6 +1,6 @@
 {
   "name":"jolosrv",
-  "version":"0.0.5",
+  "version":"0.0.6",
   "description": "A jolokia JMX to ganglia service",
   "author": "Josh Toft <joshtoft@gmail.com>",
   "repository": {

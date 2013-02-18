@@ -67,7 +67,7 @@ class JolokiaSrv
         json_files = files.filter (x) -> x.match /\.json/
       async.each json_files, @load_template, (err) =>
         @start_gmond()
-        if fn then fn(err)
+        unless fn == undefined then fn(err)
 
   ###*
    * Removes the given template from the available templates.
@@ -84,7 +84,7 @@ class JolokiaSrv
             @templates[json_data.name] = { mappings: json_data.mappings }
           catch error
             @logger.error "Error parsing `#{template}`: #{error}"
-        fn(err)
+        unless fn == undefined then fn(err)
 
   ###*
    * Removes the given template from the available templates.
