@@ -493,6 +493,77 @@ describe 'JolokiaSrv', ->
     upped_merge.graph.type.should.equal 'uint32'
     done()
 
+  it "should support merging mappings", (done) =>
+    js = new JolokiaSrv()
+    mapping1 = [
+      mbean: "java.lang:name=ParNew,type=GarbageCollector"
+      attributes: [
+        name: "LastGcInfo"
+        composites: [
+          name: "memoryUsageBeforeGC|Code Cache|init"
+          graph:
+            name: "Memory_Usage_Before_GC_Code_Cache_Init"
+            description: "Code Cache (Init) Memory Usage Before GC"
+            units: "bytes"
+            type: "int32"
+            slope: "both"
+        ]
+      ]
+    ]
+
+    mapping2 = [
+      mbean: "java.lang:name=ParNew,type=GarbageCollector"
+      attributes: [
+        name: "LastGcInfo"
+        composites: [
+          name: "memoryUsageBeforeGC|Code Cache|init"
+          graph:
+            name: "Memory_Usage_Before_GC_Code_Cache_Init"
+            description: "Code Cache (Init) Memory Usage Before GC"
+            units: "bytes"
+            type: "uint32"
+            slope: "both"
+        ,
+          name: "memoryUsageBeforeGC|Code Cache|committed"
+          graph:
+            name: "Memory_Usage_Before_GC_Code_Cache_Committed"
+            description: "Code Cache (Committed) Memory Usage Before GC"
+            units: "bytes"
+            type: "int32"
+            slope: "both"
+        ]
+      ]
+    ,
+      mbean: "java.lang:type=Memory"
+      attributes: [
+        name: "HeapMemoryUsage"
+        composites: [
+          name: "init"
+          graph:
+            name: "Heap_init"
+            description: "Initial Heap Memory Usage"
+            units: "bytes"
+            type: "int32"
+        ]
+      ]
+    ]
+
+    merged_mapping = js.merge_mappings(mapping1, mapping2)
+    merged_mapping.length.should.equal 2
+    upped_merge = (merged_mapping.filter (X) ->
+      X.mbean == "java.lang:name=ParNew,type=GarbageCollector").pop()
+
+    upped_merge.attributes.length.should.equal 1
+
+    attribs = upped_merge.attributes
+    composites = attribs[attribs.length - 1].composites
+    composites.length.should.equal 2
+    upped_comp = (composites.filter (X) ->
+          X.name == "memoryUsageBeforeGC|Code Cache|init").pop()
+
+    upped_comp.graph.type.should.equal 'uint32'
+    done()
+
   # it "should support compound templates", (done) =>
   #   config.overrides
   #     template_dir: path.resolve(__dirname, 'templates')

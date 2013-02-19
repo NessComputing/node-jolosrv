@@ -220,40 +220,54 @@ class JolokiaSrv
         @merge_parent_templates(inherits), mappings)
 
   ###*
-   * Merges the base and extension mappings
+   * Extends a base mapping with the given extension
+   * @param  {Array} (base) The base template mapping
+   * @param  {Array} (extension) The extension mapping
+   * @return {Array} The merged extension mapping
   ###
   merge_mappings: (base, extension) =>
-    extended = []
-    merged_map = base
-
-    for map in extension
-      extended.push(map.mbean)
-      base_mbean = (base.filter (X) -> X.mbean == map.mbean).pop()
-      console.log 'hi bob!'
-      console.log base_mbean
-      console.log map
-      @merge_mbean(base_mbean, map)
-    base
-
-  ###*
-   * Extends a base mbean
-  ###
-  merge_mbean: (base, extension) =>
     if base == undefined
       return extension
-    else
+    if extension == undefined
+      return base
 
-      # util = require 'util'
-      # console.log util.inspect(base, true, 10)
-      # console.log ''
-      # console.log util.inspect(extension, true, 10)
-      extension
+    merged_map = []
+    base_mappings = base.map (X) -> X.mbean
+    extension_mappings = extension.map (X) -> X.mbean
+
+    extension_only = extension_mappings.filter (X) ->
+      X not in base_mappings
+
+    base_only = base_mappings.filter (X) ->
+      X not in extension_mappings
+
+    merge_objs = new Object()
+    base_mappings.concat(extension_mappings).forEach (X) ->
+      if merge_objs.hasOwnProperty(X)
+        merge_objs[X] += 1
+      else
+        merge_objs[X] = 1
+
+    merged_map = merged_map.concat(base.filter (X) ->
+      X.mbean in base_only)
+    merged_map = merged_map.concat(extension.filter (X) ->
+      X.mbean in extension_only)
+
+    merges = Object.keys(merge_objs).filter (X) -> merge_objs[X] > 1
+    for m in merges
+      bmerge = (base.filter (X) -> X.mbean == m).pop()
+      emerge = (extension.filter (X) -> X.mbean == m).pop()
+      bmerge.attributes = @merge_attributes_or_composites(
+        bmerge.attributes, emerge.attributes)
+
+      merged_map.push bmerge
+    merged_map
 
   ###*
-   * Extends a base composite with given extensions.
+   * Extends a base attribute/composite with given extensions.
    * @param  {Array} (base) The base composite array
    * @param  {Array} (extension) The extended composite array
-   * @return {Array} (extension) The merged composite array
+   * @return {Array} The merged composite array
   ###
   merge_attributes_or_composites: (base, extension) =>
     if extension == null or extension == undefined
@@ -298,7 +312,6 @@ class JolokiaSrv
           bmerge.composites = emerge.composites
 
       merged_map.push bmerge
-
     merged_map
 
   ###*
