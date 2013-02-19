@@ -564,19 +564,32 @@ describe 'JolokiaSrv', ->
     upped_comp.graph.type.should.equal 'uint32'
     done()
 
-  # it "should support compound templates", (done) =>
-  #   config.overrides
-  #     template_dir: path.resolve(__dirname, 'templates')
-  #     gmetric: '127.0.0.1'
-  #     gPort: 43278
+  it "should support compound templates", (done) =>
+    config.overrides
+      template_dir: path.resolve(__dirname, 'templates')
+      gmetric: '127.0.0.1'
+      gPort: 43278
 
-  #   js = new JolokiaSrv(0.01)
-  #   js.load_all_templates () =>
-  #     server = dgram.createSocket('udp4')
-  #     url_href = 'http://localhost:47432/jolokia/'
-  #     js.add_client 'test', url_href, 'test_inherit'
-  #     # console.log ''
-  #     # console.log util.inspect(
-  #     js.merge_parent_templates('test_inherit') #, true, 10)
-  #     done()
+    js = new JolokiaSrv(0.01)
+    js.load_all_templates () =>
+      server = dgram.createSocket('udp4')
+      url_href = 'http://localhost:47432/jolokia/'
+      js.add_client 'test', url_href, 'test_inherit'
 
+      client_info = js.info_client('test')
+      mapping = client_info['mappings']
+      mapping.should.not.equal null
+      mapping.should.not.equal undefined
+      mapping.length.should.equal 2
+
+      merged_mbean = (mapping.filter (X) ->
+        X.mbean == "java.lang:name=ConcurrentMarkSweep,type=GarbageCollector"
+        ).pop()
+
+      mcomp = (merged_mbean.attributes[0].composites.filter (X) ->
+        X.name == "memoryUsageBeforeGc|Code Cache|committed"
+        ).pop()
+
+      mcomp.graph.units.should.equal 'bytes'
+      mcomp.graph.type.should.equal 'int32'
+      done()

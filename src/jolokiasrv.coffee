@@ -471,7 +471,7 @@ class JolokiaSrv
     return unless @interval
     if @gmond_interval_id then @stop_gmond()
     @gmond_interval_id = setInterval () =>
-      # @query_all_jolokia_nodes()
+      @query_all_jolokia_nodes()
       @submit_metrics()
     , (@interval * 1000)
 
