@@ -210,7 +210,6 @@ class JolokiaSrv
    * @return {Object} The merged template
   ###
   merge_parent_templates: (template) =>
-    console.log ''
     mappings = @templates[template].mappings
     inherits = @templates[template].inherits
     if inherits == null or inherits == undefined
