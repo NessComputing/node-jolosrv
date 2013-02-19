@@ -250,18 +250,16 @@ class JolokiaSrv
       extension
 
   ###*
-   * Extends a base attribute
-  ###
-  merge_attributes: (base, extension) =>
-    null
-
-  ###*
    * Extends a base composite with given extensions.
    * @param  {Array} (base) The base composite array
    * @param  {Array} (extension) The extended composite array
    * @return {Array} (extension) The merged composite array
   ###
-  merge_composites: (base, extension) =>
+  merge_attributes_or_composites: (base, extension) =>
+    if extension == null or extension == undefined
+      return base
+    if base == null or base == undefined
+      return extension
     merged_map = []
     base_composites = base.map (X) -> X.name
     extension_composites = extension.map (X) -> X.name
@@ -288,10 +286,19 @@ class JolokiaSrv
     for m in merges
       bmerge = (base.filter (X) -> X.name == m).pop()
       emerge = (extension.filter (X) -> X.name == m).pop()
-      for k in Object.keys(emerge.graph)
-        bmerge.graph[k] = emerge.graph[k]
+      if emerge.hasOwnProperty('graph')
+        for k in Object.keys(emerge.graph)
+          bmerge.graph[k] = emerge.graph[k]
+
+      if emerge.hasOwnProperty('composites')
+        if bmerge.hasOwnProperty('composites')
+          bmerge.composites = @merge_attributes_or_composites(
+            bmerge.composites, emerge.composites)
+        else
+          bmerge.composites = emerge.composites
+
       merged_map.push bmerge
-      
+
     merged_map
 
   ###*

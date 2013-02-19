@@ -442,13 +442,54 @@ describe 'JolokiaSrv', ->
         slope: "both"
     ]
 
-    merged_composite = js.merge_composites(composite1, composite2)
+    merged_composite = js.merge_attributes_or_composites(
+      composite1, composite2)
 
     merged_composite.length.should.equal 3
     upped_merge = (merged_composite.filter (X) ->
       X.name == "memoryUsageBeforeGC|Code Cache|init").pop()
 
     upped_merge.graph.slope.should.equal 'positive'
+    upped_merge.graph.type.should.equal 'uint32'
+    done()
+
+  it "should support merging attributes", (done) =>
+    js = new JolokiaSrv()
+    attributes1 = [
+      name: "CollectionCount"
+      graph:
+        name: "Collection_Count"
+        description: "GC Collection Count"
+        units: "gc count"
+        type: "int32"
+    ]
+
+    attributes2 = [
+      name: "CollectionCount"
+      graph:
+        name: "Collection_Count"
+        description: "GC Collection Count"
+        units: "gc count"
+        type: "uint32"
+    ,
+      name: "LastGcInfo",
+      composites: [
+        name: "memoryUsageBeforeGC|Code Cache|init",
+        graph:
+          name: "Memory_Usage_Before_GC_Code_Cache_Init",
+          description: "Code Cache (Init) Memory Usage Before GC",
+          units: "bytes",
+          type: "int32",
+          slope: "both"
+      ]
+    ]
+
+    merged_attributes = js.merge_attributes_or_composites(
+      attributes1, attributes2)
+    merged_attributes.length.should.equal 2
+    upped_merge = (merged_attributes.filter (X) ->
+      X.name == "CollectionCount").pop()
+
     upped_merge.graph.type.should.equal 'uint32'
     done()
 
