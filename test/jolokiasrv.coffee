@@ -1,6 +1,7 @@
 dgram = require 'dgram'
 http = require 'http'
 path = require 'path'
+util = require 'util'
 
 rest = require 'request'
 express = require 'express'
@@ -343,8 +344,6 @@ describe 'JolokiaSrv', ->
       gmetric: '127.0.0.1'
       gPort: 43278
 
-    util = require 'util'
-
     js = new JolokiaSrv(0.01)
     js.load_all_templates () =>
       server = dgram.createSocket('udp4')
@@ -407,4 +406,65 @@ describe 'JolokiaSrv', ->
       server.bind(43278)
       js.start_gmond()
 
-  it "should support compound templates"
+  it "should support merging composites", (done) =>
+    js = new JolokiaSrv()
+    composite1 = [
+      name: "memoryUsageBeforeGC|Code Cache|init"
+      graph:
+        name: "Memory_Usage_Before_GC_Code_Cache_Init"
+        description: "Code Cache (Init) Memory Usage Before GC"
+        units: "bytes"
+        type: "int32"
+        slope: "both"
+    ,
+      name: "awesome"
+      graph:
+        name: "best_graph_ever"
+        units: "seconds"
+        type: "int32"
+        slope: "both"
+    ]
+
+    composite2 = [
+      name: "memoryUsageBeforeGC|Code Cache|init"
+      graph:
+        name: "Memory_Usage_Before_GC_Code_Cache_Init"
+        description: "Code Cache (Init) Memory Usage Before GC"
+        units: "bytes"
+        type: "uint32"
+        slope: "positive"
+    ,
+      name: "awesome2"
+      graph:
+        name: "second_best_graph_ever"
+        units: "seconds"
+        type: "int32"
+        slope: "both"
+    ]
+
+    merged_composite = js.merge_composites(composite1, composite2)
+
+    merged_composite.length.should.equal 3
+    upped_merge = (merged_composite.filter (X) ->
+      X.name == "memoryUsageBeforeGC|Code Cache|init").pop()
+
+    upped_merge.graph.slope.should.equal 'positive'
+    upped_merge.graph.type.should.equal 'uint32'
+    done()
+
+  # it "should support compound templates", (done) =>
+  #   config.overrides
+  #     template_dir: path.resolve(__dirname, 'templates')
+  #     gmetric: '127.0.0.1'
+  #     gPort: 43278
+
+  #   js = new JolokiaSrv(0.01)
+  #   js.load_all_templates () =>
+  #     server = dgram.createSocket('udp4')
+  #     url_href = 'http://localhost:47432/jolokia/'
+  #     js.add_client 'test', url_href, 'test_inherit'
+  #     # console.log ''
+  #     # console.log util.inspect(
+  #     js.merge_parent_templates('test_inherit') #, true, 10)
+  #     done()
+

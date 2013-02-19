@@ -1,0 +1,47 @@
+{
+  "name": "test_inherit",
+  "inherits": "base",
+  "mappings": [
+
+    {
+      "mbean": "java.lang:name=ConcurrentMarkSweep,type=GarbageCollector",
+      "attributes": [
+        {
+          "name": "LastGcInfo",
+          "composites": [
+            {
+              "name": "memoryUsageBeforeGc|Code Cache|init",
+              "graph": {
+                "name": "MemoryUsage_Before_GC_Code_Cache_Init",
+                "description": "Code Cache (Init) Memory Usage Before GC",
+                "units": "bytes",
+                "type": "uint32"
+              }
+            }
+          ]
+        }
+      ]
+    },
+
+    {
+      "mbean": "java.lang:type=Memory",
+      "attributes": [
+        {
+          "name": "HeapMemoryUsage",
+          "composites": [
+            {
+              "name": "init",
+              "graph": {
+                "name": "Heap_init",
+                "description": "Initial Heap Memory Usage",
+                "units": "bytes",
+                "type": "int32"
+              }
+            }
+          ]
+        }
+      ]
+    }
+
+  ]
+}

@@ -205,16 +205,99 @@ class JolokiaSrv
     minfo.join(':')
 
   ###*
-   * TODO: Add support for merging parent templates
+   * Merges the parent template with the current template.
+   * @param  {String} (template) The template to merge
+   * @return {Object} The merged template
   ###
   merge_parent_templates: (template) =>
-    delete @templates[template].inherits
-    @templates[template]
+    console.log ''
+    mappings = @templates[template].mappings
+    inherits = @templates[template].inherits
+    if inherits == null or inherits == undefined
+      return mappings
+    else
+      return @merge_mappings(
+        @merge_parent_templates(inherits), mappings)
+
+  ###*
+   * Merges the base and extension mappings
+  ###
+  merge_mappings: (base, extension) =>
+    extended = []
+    merged_map = base
+
+    for map in extension
+      extended.push(map.mbean)
+      base_mbean = (base.filter (X) -> X.mbean == map.mbean).pop()
+      console.log 'hi bob!'
+      console.log base_mbean
+      console.log map
+      @merge_mbean(base_mbean, map)
+    base
+
+  ###*
+   * Extends a base mbean
+  ###
+  merge_mbean: (base, extension) =>
+    if base == undefined
+      return extension
+    else
+
+      # util = require 'util'
+      # console.log util.inspect(base, true, 10)
+      # console.log ''
+      # console.log util.inspect(extension, true, 10)
+      extension
+
+  ###*
+   * Extends a base attribute
+  ###
+  merge_attributes: (base, extension) =>
+    null
+
+  ###*
+   * Extends a base composite with given extensions.
+   * @param  {Array} (base) The base composite array
+   * @param  {Array} (extension) The extended composite array
+   * @return {Array} (extension) The merged composite array
+  ###
+  merge_composites: (base, extension) =>
+    merged_map = []
+    base_composites = base.map (X) -> X.name
+    extension_composites = extension.map (X) -> X.name
+
+    extension_only = extension_composites.filter (X) ->
+      X not in base_composites
+
+    base_only = base_composites.filter (X) ->
+      X not in extension_composites
+
+    merge_objs = new Object()
+    base_composites.concat(extension_composites).forEach (X) ->
+      if merge_objs.hasOwnProperty(X)
+        merge_objs[X] += 1
+      else
+        merge_objs[X] = 1
+
+    merged_map = merged_map.concat(base.filter (X) ->
+      X.name in base_only)
+    merged_map = merged_map.concat(extension.filter (X) ->
+      X.name in extension_only)
+
+    merges = Object.keys(merge_objs).filter (X) -> merge_objs[X] > 1
+    for m in merges
+      bmerge = (base.filter (X) -> X.name == m).pop()
+      emerge = (extension.filter (X) -> X.name == m).pop()
+      for k in Object.keys(emerge.graph)
+        bmerge.graph[k] = emerge.graph[k]
+      merged_map.push bmerge
+      
+    merged_map
 
   ###*
    * Generates the information for a given template including parents.
-   * @param {String} (template) The template to generate information for
-   * @param {Object} The merged information for a given template
+   * @param  {String} (template) The template to generate information for
+   * @return {Object} The merged information for a given template
   ###
   generate_template_info: (template) =>
     if @templates[template] == undefined then return @templates[template]
@@ -223,7 +306,7 @@ class JolokiaSrv
       @templates[template].inherits = null
 
     if @templates[template].inherits != undefined
-      @merge_parent_templates(template)
+      { mappings: @merge_parent_templates(template) }
     else
       delete @templates[template].inherits
       @templates[template]
@@ -369,7 +452,7 @@ class JolokiaSrv
     return unless @interval
     if @gmond_interval_id then @stop_gmond()
     @gmond_interval_id = setInterval () =>
-      @query_all_jolokia_nodes()
+      # @query_all_jolokia_nodes()
       @submit_metrics()
     , (@interval * 1000)
 
