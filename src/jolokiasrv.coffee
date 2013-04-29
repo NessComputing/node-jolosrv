@@ -534,6 +534,7 @@ class JolokiaSrv
       metric.hostname = client
       metric.spoof = true
       metric.spoof_host = client
+      if metric.value == undefined then metric.value = 0
       if metric.type == undefined then metric.type = 'int32'
       if metric.slope == undefined then metric.slope = 'both'
       @gmetric.send(@config.get('gmetric'), @config.get('gPort'), metric)
