@@ -508,7 +508,7 @@ class JolokiaSrv
         mbean = @sort_mbean(mbean)
         for attrib in Object.keys(cache[mbean])
           ainfo = cache[mbean][attrib]
-          if a == undefined
+          if ainfo == undefined
             return
           if ainfo.hasOwnProperty('graph') and ainfo.hasOwnProperty('value')
             compile_and_submit_metric(
