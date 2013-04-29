@@ -502,18 +502,22 @@ class JolokiaSrv
     # recursive_walk
     walk_graphs = (client, cache, cluster) =>
       if Object.keys(@jclients[client]) == 0
-        cb(null)
+        return
 
       for mbean in Object.keys(cache)
         mbean = @sort_mbean(mbean)
         for attrib in Object.keys(cache[mbean])
           ainfo = cache[mbean][attrib]
+          if a == undefined
+            return
           if ainfo.hasOwnProperty('graph') and ainfo.hasOwnProperty('value')
             compile_and_submit_metric(
               client, ainfo.graph, ainfo.value, cluster)
 
           for comp in Object.keys(cache[mbean][attrib])
             c = cache[mbean][attrib][comp]
+            if c == undefined
+              return
             if c.hasOwnProperty('graph') and c.hasOwnProperty('value')
               compile_and_submit_metric(
                 client, c.graph, c.value, cluster)
