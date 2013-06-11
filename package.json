@@ -28,5 +28,6 @@
   "scripts": {
     "test": "cake test"
   },
-  "main": "./lib/jolokiasrv"
+  "main": "./lib/jolokiasrv",
+  "bin": { "jolosrv", "./bin/jolosrv" }
 }
