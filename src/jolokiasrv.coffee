@@ -60,33 +60,37 @@ class JolokiaSrv
   ###
   load_all_templates: (fn) =>
     @stop_gmond()
-    fs.readdir path.resolve(config.get('template_dir')), (err, files) =>
-      if files == undefined
-        json_files = []
-      else
-        json_files = files.filter (x) -> x.match /\.json/
-      async.each json_files, @load_template, (err) =>
-        @start_gmond()
-        unless fn == undefined then fn(err)
+    fs.exists config.get('template_dir'), (exists) =>
+      unless exists then return fn("Template dir does not exist.")
+      fs.readdir path.resolve(config.get('template_dir')), (err, files) =>
+        if files == undefined
+          json_files = []
+        else
+          json_files = files.filter (x) -> x.match /\.json/
+        async.each json_files, @load_template, (err) =>
+          @start_gmond()
+          unless fn == undefined then fn(err)
 
   ###*
    * Removes the given template from the available templates.
    * @param {String}   (template) The template to remove
   ###
   load_template: (template, fn) =>
-    fs.readFile path.resolve(config.get('template_dir'), template)
-      , 'utf8', (err, data) =>
-        if (err)
-          logger.error "Error reading file: #{template}: #{err}"
-        else
-          try
-            json_data = JSON.parse(data)
-            @templates[json_data.name] =
-              inherits: json_data.inherits
-              mappings: json_data.mappings
-          catch error
-            logger.error "Error parsing `#{template}`: #{error}"
-        unless fn == undefined then fn(err)
+    fs.exists config.get('template_dir'), (exists) =>
+      unless exists then return fn("Template dir does not exist.")
+      fs.readFile path.resolve(config.get('template_dir'), template)
+        , 'utf8', (err, data) =>
+          if (err)
+            logger.error "Error reading file: #{template}: #{err}"
+          else
+            try
+              json_data = JSON.parse(data)
+              @templates[json_data.name] =
+                inherits: json_data.inherits
+                mappings: json_data.mappings
+            catch error
+              logger.error "Error parsing `#{template}`: #{error}"
+          unless fn == undefined then fn(err)
 
   ###*
    * Removes the given template from the available templates.
