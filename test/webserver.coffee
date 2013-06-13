@@ -162,7 +162,6 @@ describe 'WebServer', ->
       template: template
     , (err, res, data) =>
       assert.equal err, null
-      console.log data
       rest.post "#{url}/clients", json: true,
       body:
         name: "joe"
@@ -170,32 +169,30 @@ describe 'WebServer', ->
         template: template
       , (err, res, data) =>
         assert.equal err, null
-        console.log data
         setTimeout () ->
           rest.get "#{url}/clients", json: true,
           qs:
             info: true
           , (err, res, data) =>
             assert.equal err, null
-            console.log data
-            # client_list = Object.keys(data.clients)
-            # client_list.length.should.equal 2
-            # client_list.should.include 'bob'
-            # client_list.should.include 'joe'
+            client_list = Object.keys(data.clients)
+            client_list.length.should.equal 2
+            client_list.should.include 'bob'
+            client_list.should.include 'joe'
 
-            # for k in ['bob', 'joe']
-            #   data.clients[k].mappings.length.should.equal 1
-            #   ainfo = data.clients[k].mappings[0]
-            #   ainfo.mbean.should.equal \
-            #   'java.lang:name=ConcurrentMarkSweep,type=GarbageCollector'
-            #   ainfo.attributes.length.should.equal 1
-            #   ainfo.attributes[0].name.should.equal 'CollectionTime'
+            for k in ['bob', 'joe']
+              data.clients[k].mappings.length.should.equal 1
+              ainfo = data.clients[k].mappings[0]
+              ainfo.mbean.should.equal \
+              'java.lang:name=ConcurrentMarkSweep,type=GarbageCollector'
+              ainfo.attributes.length.should.equal 1
+              ainfo.attributes[0].name.should.equal 'CollectionTime'
 
-            #   ginfo = ainfo.attributes[0].graph
-            #   ginfo.name.should.equal 'Collection_Time'
-            #   ginfo.units.should.equal 'gc/sec'
-            #   ginfo.slope.should.equal 'both'
-            #   ginfo.tmax.should.equal 60
-            #   ginfo.dmax.should.equal 180
+              ginfo = ainfo.attributes[0].graph
+              ginfo.name.should.equal 'Collection_Time'
+              ginfo.units.should.equal 'gc/sec'
+              ginfo.slope.should.equal 'both'
+              ginfo.tmax.should.equal 60
+              ginfo.dmax.should.equal 180
             done()
           , 200
