@@ -173,7 +173,6 @@ class JolokiaSrv
    * @return {Array} The list of current clients
   ###
   list_clients: =>
-    console.log @jclients
     Object.keys(@jclients)
 
   ###*
