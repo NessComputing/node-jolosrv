@@ -161,16 +161,19 @@ describe 'WebServer', ->
       url: url_href
       template: template
     , (err, res, data) =>
+      assert.equal err, null
       rest.post "#{url}/clients", json: true,
       body:
         name: "joe"
         url: url_href
         template: template
-      , (err, res, data) =>      
+      , (err, res, data) =>
+        assert.equal err, null
         rest.get "#{url}/clients", json: true,
         qs:
           info: true
         , (err, res, data) =>
+          assert.equal err, null
           client_list = Object.keys(data.clients)
           client_list.length.should.equal 2
           client_list.should.include 'bob'
