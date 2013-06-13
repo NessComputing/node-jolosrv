@@ -174,7 +174,6 @@ describe 'WebServer', ->
           info: true
         , (err, res, data) =>
           assert.equal err, null
-          console.log data
           # client_list = Object.keys(data.clients)
           # client_list.length.should.equal 2
           # client_list.should.include 'bob'
