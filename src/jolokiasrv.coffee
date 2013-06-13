@@ -43,14 +43,16 @@ class JolokiaSrv
   watch_templates: =>
     @load_all_templates (err) =>
       if os.platform() == 'linux'
-        fs.watch config.get('template_dir')
-        , (event, filename) =>
-          fs.exists path.resolve(config.get('template_dir'), filename)
-          , (exists) =>
-            if exists
-              @load_template(filename)
-            else
-              @unload_template(filename)
+        fs.exists config.get('template_dir'), (exists) =>
+          if exists
+            fs.watch config.get('template_dir')
+            , (event, filename) =>
+              fs.exists path.resolve(config.get('template_dir'), filename)
+              , (exists) =>
+                if exists
+                  @load_template(filename)
+                else
+                  @unload_template(filename)
 
   ###*
    * Loads all of the current templates in the template directory.
