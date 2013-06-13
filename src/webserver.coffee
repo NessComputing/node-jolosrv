@@ -53,6 +53,8 @@ class WebServer
       unless client.url then return res.json 400,
         error: "Adding or updating a client requires a jolokia url."
 
+      console.log client
+
       cl = @jsrv.add_client(
         client.name, client.url, client.template, client.cluster)
       res.json 200,
