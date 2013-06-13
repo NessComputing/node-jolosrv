@@ -14,13 +14,11 @@ describe 'JolokiaSrv', ->
   gmetric = new Gmetric()
 
   beforeEach (done) ->
-    config.overrides({ 'template_dir': path.resolve(__dirname, 'templates') })
     js = new JolokiaSrv(0, false)
     done()
 
   afterEach (done) ->
     js = null
-    config.overrides({})
     done()
 
   it "should be able to add a client", (done) ->
@@ -337,11 +335,6 @@ describe 'JolokiaSrv', ->
       srv.listen(47432, post_data)
 
   it "should support sending metrics to ganglia", (done) =>
-    config.overrides
-      template_dir: path.resolve(__dirname, 'templates')
-      gmetric: '127.0.0.1'
-      gPort: 43278
-
     js = new JolokiaSrv(0.1, false)
     js.load_all_templates () =>
       url_href = 'http://localhost:47432/jolokia/'
@@ -563,11 +556,6 @@ describe 'JolokiaSrv', ->
     done()
 
   it "should support compound templates", (done) =>
-    config.overrides
-      template_dir: path.resolve(__dirname, 'templates')
-      gmetric: '127.0.0.1'
-      gPort: 43278
-
     js = new JolokiaSrv(0.01, false)
     js.load_all_templates () =>
       server = dgram.createSocket('udp4')
