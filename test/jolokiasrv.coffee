@@ -7,12 +7,10 @@ rest = require 'request'
 express = require 'express'
 
 JolokiaSrv = require '../src/jolokiasrv'
-Config = require '../src/config'
 Gmetric = require 'gmetric'
 
 describe 'JolokiaSrv', ->
   js = null
-  config = Config.get()
   gmetric = new Gmetric()
 
   beforeEach (done) ->
@@ -395,16 +393,16 @@ describe 'JolokiaSrv', ->
           else
             throw new Error("Invalid gmetric data UDP sent")
 
-      server.on 'listening', () =>
-        setTimeout () =>
-          server.close()
-        , 20
+        server.on 'listening', () =>
+          setTimeout () =>
+            server.close()
+          , 200
 
-      server.on 'close', () =>
-        done()
+        server.on 'close', () =>
+          done()
 
-      server.bind(43278)
-      js.start_gmond()
+        server.bind(43278)
+        js.start_gmond()
 
   it "should support merging composites", (done) =>
     js = new JolokiaSrv()
@@ -564,32 +562,32 @@ describe 'JolokiaSrv', ->
     upped_comp.graph.type.should.equal 'uint32'
     done()
 
-  it "should support compound templates", (done) =>
-    config.overrides
-      template_dir: path.resolve(__dirname, 'templates')
-      gmetric: '127.0.0.1'
-      gPort: 43278
+  # it "should support compound templates", (done) =>
+  #   config.overrides
+  #     template_dir: path.resolve(__dirname, 'templates')
+  #     gmetric: '127.0.0.1'
+  #     gPort: 43278
 
-    js = new JolokiaSrv(0.01)
-    js.load_all_templates () =>
-      server = dgram.createSocket('udp4')
-      url_href = 'http://localhost:47432/jolokia/'
-      js.add_client 'test', url_href, 'test_inherit'
+  #   js = new JolokiaSrv(0.01)
+  #   js.load_all_templates () =>
+  #     server = dgram.createSocket('udp4')
+  #     url_href = 'http://localhost:47432/jolokia/'
+  #     js.add_client 'test', url_href, 'test_inherit'
 
-      client_info = js.info_client('test')
-      mapping = client_info['mappings']
-      mapping.should.not.equal null
-      mapping.should.not.equal undefined
-      mapping.length.should.equal 2
+  #     client_info = js.info_client('test')
+  #     mapping = client_info['mappings']
+  #     mapping.should.not.equal null
+  #     mapping.should.not.equal undefined
+  #     mapping.length.should.equal 2
 
-      merged_mbean = (mapping.filter (X) ->
-        X.mbean == "java.lang:name=ConcurrentMarkSweep,type=GarbageCollector"
-        ).pop()
+  #     merged_mbean = (mapping.filter (X) ->
+  #       X.mbean == "java.lang:name=ConcurrentMarkSweep,type=GarbageCollector"
+  #       ).pop()
 
-      mcomp = (merged_mbean.attributes[0].composites.filter (X) ->
-        X.name == "memoryUsageBeforeGc|Code Cache|committed"
-        ).pop()
+  #     mcomp = (merged_mbean.attributes[0].composites.filter (X) ->
+  #       X.name == "memoryUsageBeforeGc|Code Cache|committed"
+  #       ).pop()
 
-      mcomp.graph.units.should.equal 'bytes'
-      mcomp.graph.type.should.equal 'int32'
-      done()
+  #     mcomp.graph.units.should.equal 'bytes'
+  #     mcomp.graph.type.should.equal 'int32'
+  #     done()

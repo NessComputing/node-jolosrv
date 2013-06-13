@@ -8,8 +8,8 @@ async = require 'async'
 mkdirp = require 'mkdirp'
 Gmetric = require 'gmetric'
 
-Config = require './config'
-Logger = require './logger'
+config = require 'nconf'
+logger = require './logger'
 
 ###*
  * Jolokia server client wrapper.
@@ -21,8 +21,6 @@ class JolokiaSrv
 
     @gmond_interval_id = null
     @gmetric = new Gmetric()
-    @config = Config.get()
-    @logger = Logger.get()
 
     @setup_template_dir()
 
@@ -30,9 +28,9 @@ class JolokiaSrv
    * Sets up the template directory and loads the current templates
   ###
   setup_template_dir: =>
-    mkdirp @config.get('template_dir'), (err) =>
+    mkdirp config.get('template_dir'), (err) =>
       if (err)
-        @logger.error "Error creating template directory: #{err}"
+        logger.error "Error creating template directory: #{err}"
         process.exit(1)
       else
         @watch_templates()
@@ -45,9 +43,9 @@ class JolokiaSrv
   watch_templates: =>
     @load_all_templates (err) =>
       if os.platform() == 'linux'
-        fs.watch @config.get('template_dir')
+        fs.watch config.get('template_dir')
         , (event, filename) =>
-          fs.exists path.resolve(@config.get('template_dir'), filename)
+          fs.exists path.resolve(config.get('template_dir'), filename)
           , (exists) =>
             if exists
               @load_template(filename)
@@ -60,7 +58,7 @@ class JolokiaSrv
   ###
   load_all_templates: (fn) =>
     @stop_gmond()
-    fs.readdir path.resolve(@config.get('template_dir')), (err, files) =>
+    fs.readdir path.resolve(config.get('template_dir')), (err, files) =>
       if files == undefined
         json_files = []
       else
@@ -74,10 +72,10 @@ class JolokiaSrv
    * @param {String}   (template) The template to remove
   ###
   load_template: (template, fn) =>
-    fs.readFile path.resolve(@config.get('template_dir'), template)
+    fs.readFile path.resolve(config.get('template_dir'), template)
       , 'utf8', (err, data) =>
         if (err)
-          @logger.error "Error reading file: #{template}: #{err}"
+          logger.error "Error reading file: #{template}: #{err}"
         else
           try
             json_data = JSON.parse(data)
@@ -85,7 +83,7 @@ class JolokiaSrv
               inherits: json_data.inherits
               mappings: json_data.mappings
           catch error
-            @logger.error "Error parsing `#{template}`: #{error}"
+            logger.error "Error parsing `#{template}`: #{error}"
         unless fn == undefined then fn(err)
 
   ###*
@@ -393,7 +391,7 @@ class JolokiaSrv
           Object.keys(hattribs[mbean][attribute].graph).length > 0
             hattribs[mbean][attribute].value = value
         catch error
-          @logger.error """
+          logger.error """
           Error parsing attribute: #{error}
           mbean: #{mbean}
           attribute: #{attribute}
@@ -408,7 +406,7 @@ class JolokiaSrv
           try
             hattribs[mbean][attribute][k].value = retrieve_composite_value(k)
           catch error
-            @logger.error """
+            logger.error """
             Error parsing composite attribute: #{error}
             mbean: #{mbean}
             attribute: #{attribute}
@@ -528,10 +526,10 @@ class JolokiaSrv
       metric.value = value
 
       if cluster == null or cluster == undefined
-        metric.cluster = @config.get('cluster')
+        metric.cluster = config.get('cluster')
       else
         metric.cluster = cluster
-      cluster = [@config.get('cluster_prefix'), metric.cluster].filter (x) ->
+      cluster = [config.get('cluster_prefix'), metric.cluster].filter (x) ->
         x != null and x != undefined
 
       metric.cluster = cluster.join('_')
@@ -541,12 +539,12 @@ class JolokiaSrv
       if metric.value == undefined then metric.value = 0
       if metric.type == undefined then metric.type = 'int32'
       if metric.slope == undefined then metric.slope = 'both'
-      @gmetric.send(@config.get('gmetric'), @config.get('gPort'), metric)
+      @gmetric.send(config.get('gmetric'), config.get('gPort'), metric)
 
     async.each clientlist
     , (client, cb) =>
       walk_graphs(client, @jclients[client].cache, @jclients[client].cluster)
     , (err) =>
-      @logger.error "Error submitting metrics: #{err}"
+      logger.error "Error submitting metrics: #{err}"
 
 module.exports = JolokiaSrv

@@ -2,9 +2,9 @@ express = require 'express'
 http = require 'http'
 require('pkginfo')(module, 'name', 'version')
 
-Config = require './config'
-Logger = require './logger'
-{Identity, generate_identity} = require './identity'
+config = require 'nconf'
+logger = require './logger'
+{identity, generate_identity} = require './identity'
 JolokiaSrv = require './jolokiasrv'
 
 ###*
@@ -12,18 +12,16 @@ JolokiaSrv = require './jolokiasrv'
 ###
 class WebServer
   constructor: ->
-    @config = Config.get()
-    @logger = Logger.get()
-    @identity = Identity.get()
     @jsrv = new JolokiaSrv()
     @app = express()
 
     @app.use express.bodyParser()
     @app.use @errorHandler
+    @app.use express.favicon()
     @setup_routing()
     @srv = http.createServer(@app)
-    @srv.listen(@config.get('port'))
-    @logger.info "Webserver is up at: http://0.0.0.0:#{@config.get('port')}"
+    @srv.listen(config.get('port'))
+    logger.info "Webserver is up at: http://0.0.0.0:#{config.get('port')}"
 
   errorHandler: (err, req, res, next) ->
     res.status 500
@@ -37,12 +35,6 @@ class WebServer
       res.json 200, 
         name: exports.name,
         version: exports.version
-
-    # Silence favicon requests.
-    @app.get '/favicon.ico', (req, res, next) =>
-      res.setHeader 'Content-Type', 'image/x-icon'
-      res.setHeader 'Cache-Control', 'public, max-age=864000'
-      res.end()
 
     # List all of the current clients. (Details if info=true)
     @app.get '/clients', (req, res, next) =>
