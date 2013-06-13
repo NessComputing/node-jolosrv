@@ -173,16 +173,14 @@ describe 'WebServer', ->
         qs:
           info: true
         , (err, res, data) =>
-          clients = data.clients
-
-          client_list = Object.keys(clients)
+          client_list = Object.keys(data.clients)
           client_list.length.should.equal 2
           client_list.should.include 'bob'
           client_list.should.include 'joe'
 
           for k in ['bob', 'joe']
-            clients[k].mappings.length.should.equal 1
-            ainfo = clients[k].mappings[0]
+            data.clients[k].mappings.length.should.equal 1
+            ainfo = data.clients[k].mappings[0]
             ainfo.mbean.should.equal \
             'java.lang:name=ConcurrentMarkSweep,type=GarbageCollector'
             ainfo.attributes.length.should.equal 1
