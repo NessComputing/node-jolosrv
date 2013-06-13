@@ -123,6 +123,7 @@ class JolokiaSrv
       template: template
       cache: new Object()
     console.log @jclients
+    @jclients[name]
 
   ###*
    * Cleanup mappings for a client before they are cached for fast lookups.
