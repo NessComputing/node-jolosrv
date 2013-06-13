@@ -15,7 +15,7 @@ describe 'JolokiaSrv', ->
 
   beforeEach (done) ->
     config.overrides({ 'template_dir': path.resolve(__dirname, 'templates') })
-    js = new JolokiaSrv(0)
+    js = new JolokiaSrv(0, false)
     done()
 
   afterEach (done) ->
@@ -342,11 +342,11 @@ describe 'JolokiaSrv', ->
       gmetric: '127.0.0.1'
       gPort: 43278
 
-    js = new JolokiaSrv(0.01)
+    js = new JolokiaSrv(0.1, false)
     js.load_all_templates () =>
-      server = dgram.createSocket('udp4')
       url_href = 'http://localhost:47432/jolokia/'
       js.add_client 'test', url_href, 'init_and_committed'
+      server = dgram.createSocket('udp4')
 
       js.jclients['test'].cache =
         'java.lang:name=ParNew,type=GarbageCollector':
@@ -393,19 +393,19 @@ describe 'JolokiaSrv', ->
           else
             throw new Error("Invalid gmetric data UDP sent")
 
-        server.on 'listening', () =>
-          setTimeout () =>
-            server.close()
-          , 200
+      server.on 'listening', () =>
+        js.submit_metrics()
+        setTimeout () =>
+          server.close()
+        , 200
 
-        server.on 'close', () =>
-          done()
+      server.on 'close', () =>
+        done()
 
-        server.bind(43278)
-        js.start_gmond()
+      server.bind(config.get('gPort'))
 
   it "should support merging composites", (done) =>
-    js = new JolokiaSrv()
+    js = new JolokiaSrv(20, false)
     composite1 = [
       name: "memoryUsageBeforeGC|Code Cache|init"
       graph:
@@ -452,7 +452,7 @@ describe 'JolokiaSrv', ->
     done()
 
   it "should support merging attributes", (done) =>
-    js = new JolokiaSrv()
+    js = new JolokiaSrv(20, false)
     attributes1 = [
       name: "CollectionCount"
       graph:
@@ -491,103 +491,103 @@ describe 'JolokiaSrv', ->
     upped_merge.graph.type.should.equal 'uint32'
     done()
 
-  it "should support merging mappings", (done) =>
-    js = new JolokiaSrv()
-    mapping1 = [
-      mbean: "java.lang:name=ParNew,type=GarbageCollector"
-      attributes: [
-        name: "LastGcInfo"
-        composites: [
-          name: "memoryUsageBeforeGC|Code Cache|init"
-          graph:
-            name: "Memory_Usage_Before_GC_Code_Cache_Init"
-            description: "Code Cache (Init) Memory Usage Before GC"
-            units: "bytes"
-            type: "int32"
-            slope: "both"
-        ]
-      ]
-    ]
+  # it "should support merging mappings", (done) =>
+  #   js = new JolokiaSrv(20, false)
+  #   mapping1 = [
+  #     mbean: "java.lang:name=ParNew,type=GarbageCollector"
+  #     attributes: [
+  #       name: "LastGcInfo"
+  #       composites: [
+  #         name: "memoryUsageBeforeGC|Code Cache|init"
+  #         graph:
+  #           name: "Memory_Usage_Before_GC_Code_Cache_Init"
+  #           description: "Code Cache (Init) Memory Usage Before GC"
+  #           units: "bytes"
+  #           type: "int32"
+  #           slope: "both"
+  #       ]
+  #     ]
+  #   ]
 
-    mapping2 = [
-      mbean: "java.lang:name=ParNew,type=GarbageCollector"
-      attributes: [
-        name: "LastGcInfo"
-        composites: [
-          name: "memoryUsageBeforeGC|Code Cache|init"
-          graph:
-            name: "Memory_Usage_Before_GC_Code_Cache_Init"
-            description: "Code Cache (Init) Memory Usage Before GC"
-            units: "bytes"
-            type: "uint32"
-            slope: "both"
-        ,
-          name: "memoryUsageBeforeGC|Code Cache|committed"
-          graph:
-            name: "Memory_Usage_Before_GC_Code_Cache_Committed"
-            description: "Code Cache (Committed) Memory Usage Before GC"
-            units: "bytes"
-            type: "int32"
-            slope: "both"
-        ]
-      ]
-    ,
-      mbean: "java.lang:type=Memory"
-      attributes: [
-        name: "HeapMemoryUsage"
-        composites: [
-          name: "init"
-          graph:
-            name: "Heap_init"
-            description: "Initial Heap Memory Usage"
-            units: "bytes"
-            type: "int32"
-        ]
-      ]
-    ]
+  #   mapping2 = [
+  #     mbean: "java.lang:name=ParNew,type=GarbageCollector"
+  #     attributes: [
+  #       name: "LastGcInfo"
+  #       composites: [
+  #         name: "memoryUsageBeforeGC|Code Cache|init"
+  #         graph:
+  #           name: "Memory_Usage_Before_GC_Code_Cache_Init"
+  #           description: "Code Cache (Init) Memory Usage Before GC"
+  #           units: "bytes"
+  #           type: "uint32"
+  #           slope: "both"
+  #       ,
+  #         name: "memoryUsageBeforeGC|Code Cache|committed"
+  #         graph:
+  #           name: "Memory_Usage_Before_GC_Code_Cache_Committed"
+  #           description: "Code Cache (Committed) Memory Usage Before GC"
+  #           units: "bytes"
+  #           type: "int32"
+  #           slope: "both"
+  #       ]
+  #     ]
+  #   ,
+  #     mbean: "java.lang:type=Memory"
+  #     attributes: [
+  #       name: "HeapMemoryUsage"
+  #       composites: [
+  #         name: "init"
+  #         graph:
+  #           name: "Heap_init"
+  #           description: "Initial Heap Memory Usage"
+  #           units: "bytes"
+  #           type: "int32"
+  #       ]
+  #     ]
+  #   ]
 
-    merged_mapping = js.merge_mappings(mapping1, mapping2)
-    merged_mapping.length.should.equal 2
-    upped_merge = (merged_mapping.filter (X) ->
-      X.mbean == "java.lang:name=ParNew,type=GarbageCollector").pop()
+  #   merged_mapping = js.merge_mappings(mapping1, mapping2)
+  #   merged_mapping.length.should.equal 2
+  #   upped_merge = (merged_mapping.filter (X) ->
+  #     X.mbean == "java.lang:name=ParNew,type=GarbageCollector").pop()
 
-    upped_merge.attributes.length.should.equal 1
+  #   upped_merge.attributes.length.should.equal 1
 
-    attribs = upped_merge.attributes
-    composites = attribs[attribs.length - 1].composites
-    composites.length.should.equal 2
-    upped_comp = (composites.filter (X) ->
-          X.name == "memoryUsageBeforeGC|Code Cache|init").pop()
+  #   attribs = upped_merge.attributes
+  #   composites = attribs[attribs.length - 1].composites
+  #   composites.length.should.equal 2
+  #   upped_comp = (composites.filter (X) ->
+  #         X.name == "memoryUsageBeforeGC|Code Cache|init").pop()
 
-    upped_comp.graph.type.should.equal 'uint32'
-    done()
+  #   upped_comp.graph.type.should.equal 'uint32'
+  #   done()
 
-  # it "should support compound templates", (done) =>
-  #   config.overrides
-  #     template_dir: path.resolve(__dirname, 'templates')
-  #     gmetric: '127.0.0.1'
-  #     gPort: 43278
+  # # it "should support compound templates", (done) =>
+  # #   config.overrides
+  # #     template_dir: path.resolve(__dirname, 'templates')
+  # #     gmetric: '127.0.0.1'
+  # #     gPort: 43278
 
-  #   js = new JolokiaSrv(0.01)
-  #   js.load_all_templates () =>
-  #     server = dgram.createSocket('udp4')
-  #     url_href = 'http://localhost:47432/jolokia/'
-  #     js.add_client 'test', url_href, 'test_inherit'
+  # #   js = new JolokiaSrv(0.01, false)
+  # #   js.load_all_templates () =>
+  # #     server = dgram.createSocket('udp4')
+  # #     url_href = 'http://localhost:47432/jolokia/'
+  # #     js.add_client 'test', url_href, 'test_inherit'
 
-  #     client_info = js.info_client('test')
-  #     mapping = client_info['mappings']
-  #     mapping.should.not.equal null
-  #     mapping.should.not.equal undefined
-  #     mapping.length.should.equal 2
+  # #     client_info = js.info_client('test')
+  # #     mapping = client_info['mappings']
+  # #     mapping.should.not.equal null
+  # #     mapping.should.not.equal undefined
+  # #     mapping.length.should.equal 2
 
-  #     merged_mbean = (mapping.filter (X) ->
-  #       X.mbean == "java.lang:name=ConcurrentMarkSweep,type=GarbageCollector"
-  #       ).pop()
+  # #     merged_mbean = (mapping.filter (X) ->
+  # #       X.mbean == "java.lang:name=ConcurrentMarkSweep,type=GarbageCollector"
+  # #       ).pop()
 
-  #     mcomp = (merged_mbean.attributes[0].composites.filter (X) ->
-  #       X.name == "memoryUsageBeforeGc|Code Cache|committed"
-  #       ).pop()
+  # #     mcomp = (merged_mbean.attributes[0].composites.filter (X) ->
+  # #       X.name == "memoryUsageBeforeGc|Code Cache|committed"
+  # #       ).pop()
 
-  #     mcomp.graph.units.should.equal 'bytes'
-  #     mcomp.graph.type.should.equal 'int32'
-  #     done()
+  # #     mcomp.graph.units.should.equal 'bytes'
+  # #     mcomp.graph.type.should.equal 'int32'
+  # #     done()

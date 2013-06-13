@@ -15,7 +15,7 @@ logger = require './logger'
  * Jolokia server client wrapper.
 ###
 class JolokiaSrv
-  constructor: (@interval=20) ->
+  constructor: (@interval=20, @gmond_enabled=true) ->
     @jclients  = new Object()
     @templates = new Object()
 
@@ -429,7 +429,7 @@ class JolokiaSrv
     cinfo = @info_client(name)
     query_info = @generate_query_info(cinfo)
     query = @generate_client_query(query_info)
-    if query == [] then return null
+    if query == [] then return fn(null, null)
     client = @jclients[name].client
     client.read query, (response) =>
       @lookup_attribute_or_composites(name, cinfo.mappings, response, fn)
@@ -468,6 +468,7 @@ class JolokiaSrv
   start_gmond: =>
     return unless @interval
     if @gmond_interval_id then @stop_gmond()
+    unless @gmond_enabled then return
     @gmond_interval_id = setInterval () =>
       @query_all_jolokia_nodes()
       @submit_metrics()
