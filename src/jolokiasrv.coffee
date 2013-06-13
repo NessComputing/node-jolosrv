@@ -122,8 +122,6 @@ class JolokiaSrv
       url: url
       template: template
       cache: new Object()
-    console.log @jclients
-    @jclients[name]
 
   ###*
    * Cleanup mappings for a client before they are cached for fast lookups.
@@ -175,6 +173,7 @@ class JolokiaSrv
    * @return {Array} The list of current clients
   ###
   list_clients: =>
+    console.log @jclients
     Object.keys(@jclients)
 
   ###*
