@@ -11,8 +11,8 @@ Gmetric = require 'gmetric'
 config = require 'nconf'
 logger = require './logger'
 
-###*
- * Jolokia server client wrapper.
+###
+Jolokia server client wrapper.
 ###
 class JolokiaSrv
   constructor: (@interval=20, @gmond_enabled=true) ->
@@ -24,8 +24,8 @@ class JolokiaSrv
 
     @setup_template_dir()
 
-  ###*
-   * Sets up the template directory and loads the current templates
+  ###
+  Sets up the template directory and loads the current templates
   ###
   setup_template_dir: =>
     mkdirp config.get('template_dir'), (err) =>
@@ -35,10 +35,10 @@ class JolokiaSrv
       else
         @watch_templates()
 
-  ###*
-   * Watch template directory and update @templates on changes.
-   * @note watching with inotify is current only supported on linux,
-   * other operating systems will drop to an initial-load only.
+  ###
+  Watch template directory and update @templates on changes.
+  @note watching with inotify is current only supported on linux,
+  other operating systems will drop to an initial-load only.
   ###
   watch_templates: =>
     @load_all_templates (err) =>
@@ -54,9 +54,9 @@ class JolokiaSrv
                 else
                   @unload_template(filename)
 
-  ###*
-   * Loads all of the current templates in the template directory.
-   * @param {Function} (fn) The callback function
+  ###
+  Loads all of the current templates in the template directory.
+  @param {Function} (fn) The callback function
   ###
   load_all_templates: (fn) =>
     @stop_gmond()
@@ -71,9 +71,9 @@ class JolokiaSrv
           @start_gmond()
           unless fn == undefined then fn(err)
 
-  ###*
-   * Removes the given template from the available templates.
-   * @param {String}   (template) The template to remove
+  ###
+  Removes the given template from the available templates.
+  @param {String}   (template) The template to remove
   ###
   load_template: (template, fn) =>
     fs.exists config.get('template_dir'), (exists) =>
@@ -92,27 +92,27 @@ class JolokiaSrv
               logger.error "Error parsing `#{template}`: #{error}"
           unless fn == undefined then fn(err)
 
-  ###*
-   * Removes the given template from the available templates.
-   * @param {String} (template) The template to remove
+  ###
+  Removes the given template from the available templates.
+  @param {String} (template) The template to remove
   ###
   unload_template: (template) =>
     delete @templates[template]
 
-  ###*
-   * The list of current templates.
-   * @return {Array} The current list of templates
+  ###
+  The list of current templates.
+  @return {Array} The current list of templates
   ###
   list_templates: =>
     Object.keys(@templates)
 
-  ###*
-   * Add a new jolokia lookup client into the hash.
-   * @param  {String} (name) The name of the client to add
-   * @param  {String} (url) The jolokia url for the client
-   * @param  {Object} (template) The attributes template
-   * @param  {Object} (cluster) The cluster for the client
-   * @return {Object} The jolokia client that was added
+  ###
+  Add a new jolokia lookup client into the hash.
+  @param  {String} (name) The name of the client to add
+  @param  {String} (url) The jolokia url for the client
+  @param  {Object} (template) The attributes template
+  @param  {Object} (cluster) The cluster for the client
+  @return {Object} The jolokia client that was added
   ###
   add_client: (name, url, template, cluster) =>
     @jclients[name] =
@@ -123,10 +123,10 @@ class JolokiaSrv
       template: template
       cache: new Object()
 
-  ###*
-   * Cleanup mappings for a client before they are cached for fast lookups.
-   * @param {Object} (mappings) The metrics mappings for a given client
-   * @param {Function} (fn) The callback function
+  ###
+  Cleanup mappings for a client before they are cached for fast lookups.
+  @param {Object} (mappings) The metrics mappings for a given client
+  @param {Function} (fn) The callback function
   ###
   convert_mappings_to_hash: (mappings, fn) =>
     async.reduce mappings, new Object()
@@ -168,24 +168,24 @@ class JolokiaSrv
     , (err, results) =>
       fn(err, results)
 
-  ###*
-   * List the current jolokia clients.
-   * @return {Array} The list of current clients
+  ###
+  List the current jolokia clients.
+  @return {Array} The list of current clients
   ###
   list_clients: =>
     Object.keys(@jclients)
 
-  ###*
-   * Removes a jolokia client from the hash.
-   * @param  {String} (name) The name of the client to remove
+  ###
+  Removes a jolokia client from the hash.
+  @param  {String} (name) The name of the client to remove
   ###
   remove_client: (name) =>
     delete @jclients[name]
 
-  ###*
-   * Returns detailed information for the given client.
-   * @param  {String} (name) The name of the client to lookup
-   * @return {Object} The hash representing the client info
+  ###
+  Returns detailed information for the given client.
+  @param  {String} (name) The name of the client to lookup
+  @return {Object} The hash representing the client info
   ###
   info_client: (name) =>
     client = @jclients[name]
@@ -197,10 +197,10 @@ class JolokiaSrv
     else
       null
 
-  ###*
-   * Sort mbean entries to handle jolokia silliness.
-   * @param  {String} (mbean) The mbean name to sort
-   * @return {String} The sorted mbean string
+  ###
+  Sort mbean entries to handle jolokia silliness.
+  @param  {String} (mbean) The mbean name to sort
+  @return {String} The sorted mbean string
   ###
   sort_mbean: (mbean) =>
     minfo = mbean.split(':')
@@ -208,10 +208,10 @@ class JolokiaSrv
     minfo.push(suffix.split(',').sort().join(','))
     minfo.join(':')
 
-  ###*
-   * Merges the parent template with the current template.
-   * @param  {String} (template) The template to merge
-   * @return {Object} The merged template
+  ###
+  Merges the parent template with the current template.
+  @param  {String} (template) The template to merge
+  @return {Object} The merged template
   ###
   merge_parent_templates: (template) =>
     mappings = @templates[template].mappings
@@ -222,11 +222,11 @@ class JolokiaSrv
       return @merge_mappings(
         @merge_parent_templates(inherits), mappings)
 
-  ###*
-   * Extends a base mapping with the given extension
-   * @param  {Array} (base) The base template mapping
-   * @param  {Array} (extension) The extension mapping
-   * @return {Array} The merged extension mapping
+  ###
+  Extends a base mapping with the given extension
+  @param  {Array} (base) The base template mapping
+  @param  {Array} (extension) The extension mapping
+  @return {Array} The merged extension mapping
   ###
   merge_mappings: (base, extension) =>
     if base == undefined
@@ -266,11 +266,11 @@ class JolokiaSrv
       merged_map.push bmerge
     merged_map
 
-  ###*
-   * Extends a base attribute/composite with given extensions.
-   * @param  {Array} (base) The base composite array
-   * @param  {Array} (extension) The extended composite array
-   * @return {Array} The merged composite array
+  ###
+  Extends a base attribute/composite with given extensions.
+  @param  {Array} (base) The base composite array
+  @param  {Array} (extension) The extended composite array
+  @return {Array} The merged composite array
   ###
   merge_attributes_or_composites: (base, extension) =>
     if extension == null or extension == undefined
@@ -317,10 +317,10 @@ class JolokiaSrv
       merged_map.push bmerge
     merged_map
 
-  ###*
-   * Generates the information for a given template including parents.
-   * @param  {String} (template) The template to generate information for
-   * @return {Object} The merged information for a given template
+  ###
+  Generates the information for a given template including parents.
+  @param  {String} (template) The template to generate information for
+  @return {Object} The merged information for a given template
   ###
   generate_template_info: (template) =>
     if @templates[template] == undefined then return @templates[template]
@@ -334,10 +334,10 @@ class JolokiaSrv
       delete @templates[template].inherits
       @templates[template]
 
-  ###*
-   * Generates a query information for the JMX update.
-   * @param  {Object} (mappings) The detailed information for a client
-   * @return {Array}  The list of info objects
+  ###
+  Generates a query information for the JMX update.
+  @param  {Object} (mappings) The detailed information for a client
+  @return {Array}  The list of info objects
   ###
   generate_query_info: (client) =>
     query_info = []
@@ -354,10 +354,10 @@ class JolokiaSrv
             composites: c
       return query_info
 
-  ###*
-   * Generates a query array for the jolokia client.
-   * @param  {Object} (query_info) The query info for a client
-   * @return {Array}  The list of items to query
+  ###
+  Generates a query array for the jolokia client.
+  @param  {Object} (query_info) The query info for a client
+  @return {Array}  The list of items to query
   ###
   generate_client_query: (query_info) =>
     query = []
@@ -365,12 +365,12 @@ class JolokiaSrv
       query.push({ mbean: @sort_mbean(q.mbean), attribute: q.attribute })
     return query
 
-  ###*
-   * Takes the query_info and response objects and gets the proper result set.
-   * @param {String} (name) The name of the client to query
-   * @param {Object} (mappings) The metrics mappings for a client
-   * @param {Object} (response) The query response from jolokia
-   * @param {Function} (fn) The callback function
+  ###
+  Takes the query_info and response objects and gets the proper result set.
+  @param {String} (name) The name of the client to query
+  @param {Object} (mappings) The metrics mappings for a client
+  @param {Object} (response) The query response from jolokia
+  @param {Function} (fn) The callback function
   ###
   lookup_attribute_or_composites: (name, mappings, response, fn) =>
     @convert_mappings_to_hash mappings, (h_err, hattribs) =>
@@ -426,10 +426,10 @@ class JolokiaSrv
         @jclients[name].cache = hattribs
         fn(null, hattribs)
 
-  ###*
-   * Queries jolokia mbeans for a given client and updates their values.
-   * @param {String} (name) The name of the client to query
-   * @param {Function} (fn) The callback function
+  ###
+  Queries jolokia mbeans for a given client and updates their values.
+  @param {String} (name) The name of the client to query
+  @param {Function} (fn) The callback function
   ###
   query_jolokia: (name, fn) =>
     cinfo = @info_client(name)
@@ -440,8 +440,8 @@ class JolokiaSrv
     client.read query, (response) =>
       @lookup_attribute_or_composites(name, cinfo.mappings, response, fn)
 
-  ###*
-   * Attempt to query each of the nodes, ignoring failures.
+  ###
+  Attempt to query each of the nodes, ignoring failures.
   ###
   query_all_jolokia_nodes: (cb) =>
     attempt_to_query = (client, fn) =>
@@ -458,9 +458,9 @@ class JolokiaSrv
     else
       if cb then cb(null)
 
-  ###*
-   * Returns detailed information for all clients.
-   * @return {Object} The hash representing the all client info
+  ###
+  Returns detailed information for all clients.
+  @return {Object} The hash representing the all client info
   ###
   info_all_clients: =>
     clients = new Object()
@@ -468,8 +468,8 @@ class JolokiaSrv
       clients[key] = @info_client(key)
     clients
 
-  ###*
-   * Starts up the gmond metric spooler.
+  ###
+  Starts up the gmond metric spooler.
   ###
   start_gmond: =>
     return unless @interval
@@ -480,25 +480,26 @@ class JolokiaSrv
       @submit_metrics()
     , (@interval * 1000)
 
-  ###*
-   * Stops the gmond metric spooler.
+  ###
+  Stops the gmond metric spooler.
   ###
   stop_gmond: =>
     if @gmond_interval_id
       clearInterval(@gmond_interval_id)
       @gmond_interval_id = null
 
-  ###*
-   * Submits gmetric data to the gmond target.
-   * ex:  { host:  'exhost.domain.com',
-   *        name:  'mygraphname',
-   *        units: 'percentage',
-   *        type:  'int32',
-   *        slope: 'both',
-   *        tmax:   60,
-   *        dmax:   120,
-   *        group:  'mygraph_group',
-   *        cluster: 'example_cluster' }
+  ###
+  Submits gmetric data to the gmond target.
+  @example:
+    { host:  'exhost.domain.com',
+      name:  'mygraphname',
+      units: 'percentage',
+      type:  'int32',
+      slope: 'both',
+      tmax:   60,
+      dmax:   120,
+      group:  'mygraph_group',
+      cluster: 'example_cluster' }
   ###
   submit_metrics: =>
     clientlist = Object.keys(@jclients)

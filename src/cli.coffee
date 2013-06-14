@@ -4,8 +4,8 @@ require('pkginfo')(module, 'name')
 config = require 'nconf'
 logger = require './logger'
 
-###*
- * The command line interface class.
+###
+The command line interface class.
 ###
 class CLI
   constructor: ->

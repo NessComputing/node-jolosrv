@@ -7,8 +7,8 @@ logger = require './logger'
 {identity, generate_identity} = require './identity'
 JolokiaSrv = require './jolokiasrv'
 
-###*
- * The webserver class.
+###
+The webserver class.
 ###
 class WebServer
   constructor: ->
