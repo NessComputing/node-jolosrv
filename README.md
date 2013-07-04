@@ -1,4 +1,4 @@
-node-jolosrv [![build status](https://secure.travis-ci.org/seryl/node-jolosrv.png)](https://travis-ci.org/seryl/node-jolosrv)
+node-jolosrv [![build status](https://secure.travis-ci.org/seryl/node-jolosrv.png?branch=master)](https://travis-ci.org/seryl/node-jolosrv)
 ============
 
 A jolokia JMX to ganglia service for handling monitor registration
